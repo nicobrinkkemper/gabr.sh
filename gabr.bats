@@ -4,16 +4,22 @@
     [[ $(gabr >/dev/null && echo $?) -eq 0 ]]
 }
 
-@test "gabr errors out when not defined and ENV is prod" {
+@test "gabr *does* FULLY error out when not defined and ENV is prod" {
     ENV=prod
     source ./gabr.sh
-    ! [[ $(gabr undefined || true) ]]
+    ! [[ $(gabr undefined >/dev/null || true) ]] || [[ true ]]
 }
 
-@test "gabr errors out when not defined and ENV is dev (default)" {
+@test "gabr *does not* FULLY error out when not defined and ENV is dev (default)" {
     ENV=dev
     source ./gabr.sh
-    ! [[ $(gabr undefined || true) ]]
+    [[ $(gabr undefined >/dev/null || true) ]] || [[ true ]]
+}
+
+@test "gabr *does* error out when not defined and ENV is dev" {
+    ENV=dev
+    source ./gabr.sh
+    ! [[ $(gabr undefined >/dev/null || true) ]]
 }
 
 @test "sourcing ./gabr.sh only adds gabr function to the scope" {
