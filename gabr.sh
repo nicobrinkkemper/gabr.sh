@@ -4,7 +4,7 @@ declare -x ENV=${ENV:-dev}
 declare -x GABR_ROOT=${GABR_ROOT:-"$(command git rev-parse --show-toplevel)"} # Making this global allows us to access anywhere.
 
 function gabr() { # Run a variety of bash functions inside this git repo
-    FUNCNEST=100
+    FUNCNEST=50
     # Development mode
     if [ ${#FUNCNAME[@]} -eq 1 ] && [[ ${ENV} = dev  ]]; then
         bash $(! [[ $PWD = $GABR_ROOT ]] && echo  ${GABR_ROOT}/)${BASH_SOURCE} ${*}
@@ -20,10 +20,9 @@ function gabr() { # Run a variety of bash functions inside this git repo
     function _reportError() ( # -- Prints code that is cause of error -- e.g. trap '_reportError' ERR
         local IFS=$' '
         set -- $(caller)
-        echo "Stopped at line ${1} - ${2}" 1>&2
-        if [[ $ENV = dev ]]; then
+        if [[ $ENV = debug ]] || [[ -v debug ]]; then
+            echo "Stopped at line ${1} - ${2}" 1>&2
             _reportLines ${1} ${2} 3 1>&2
-            return
         fi
         return 1  # bash wil exit
     )
@@ -68,15 +67,17 @@ function gabr() { # Run a variety of bash functions inside this git repo
     }
 
     function _onRun() ( # <fn> <args> -- Run fn with args in subshell at dir, report when uncallable in scope
-        trap '_reportError' ERR
         
+        trap '_reportError' ERR
+
         gabr(){ # A simple gabr implementation for subshell
+            trap '_reportError' ERR
             if [[ -n ${1:-} ]]; then
                 args=(${@})
             fi
             _onRun
         }
-        _onScope
+        _onScope # if you error here: the function or file wasn't found
         
         if ! [[ $(type -t "$fn") = "function" ]]; then
             _reportFnCallable
@@ -144,7 +145,7 @@ function gabr() { # Run a variety of bash functions inside this git repo
                     reuseFn=$prevFn
                 fi
                 _shiftArgs
-                source $fn
+                source $fn # if you crash here, the file errored out!
                 files+=([${fn}]=$fn)
                 if [[ -v reuseFn ]] && [[ $(type -t "$reuseFn") = "function" ]]; then # only reuse the previous argument if the function is there
                     args=($reuseFn ${args[@]}) # 'gabr ./help.sh help' can be reduced to just 'gabr help'
@@ -162,7 +163,7 @@ function gabr() { # Run a variety of bash functions inside this git repo
                 shift # omit the dash
                 args=($(filename ${fn}) ${@})
             fi
-            _onScope
+            _onScope 
             ;;
         *)
             if [[ -f $fn ]]; then                               # allow file
@@ -178,11 +179,11 @@ function gabr() { # Run a variety of bash functions inside this git repo
             elif ! [[ $dir = . ]]; then                         # allow the same as above, but in current directory
                 dir=.
                 args=($fn ${args[@]})
-            elif ! [[ $PWD != $GABR_ROOT ]]; then               # allow the same as above, but in root directory
+            elif ! [[ $PWD = $GABR_ROOT ]]; then               # allow the same as above, but in root directory
                 args=(root $fn ${args[@]})                     
             else
                 printf "${wrapErr}" "${fn} is not a valid option" 1>&2
-                return
+                return 1
             fi
             _onScope
             ;;

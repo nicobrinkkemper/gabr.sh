@@ -1,0 +1,32 @@
+{
+  "name": "gabr.sh",
+  "version": "1.0.0",
+  "description": "Make Bash functions accessible with gabr.sh",
+  "main": "gabr.sh",
+  "scripts": {
+    "test": "./node_modules/.bin/bats gabr.bats"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicobrinkkemper/gabr.sh.git"
+  },
+  "keywords": [
+    "Bash",
+    "functional",
+    "function",
+    "file",
+    "gabr",
+    "commandline",
+    "tool",
+    "terminal"
+  ],
+  "author": "Nico Brinkkemper",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nicobrinkkemper/gabr.sh/issues"
+  },
+  "homepage": "https://github.com/nicobrinkkemper/gabr.sh#readme",
+  "devDependencies": {
+    "bats": "^1.1.0"
+  }
+}

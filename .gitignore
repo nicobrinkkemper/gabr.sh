@@ -1,3 +1,5 @@
+.history
+.env
 # Logs
 logs
 *.log
