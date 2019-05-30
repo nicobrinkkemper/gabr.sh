@@ -94,6 +94,6 @@ function bonito(){
     source ./gabr.sh
     local result="$(gabr $(gabr .temptest jim))"
     echo result="\"${result}\"" 1>&2
-    # rm -rf .temptest
+    rm -rf .temptest
     [[ "$result"  = "de wever" ]]
 }
