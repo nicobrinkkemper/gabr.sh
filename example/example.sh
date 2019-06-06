@@ -2,57 +2,24 @@ if ! [[ -v args ]]; then
 function example(){ # 
     echo "This is a example" >&2
 }
-else
-usage() {
+fi
+
+function usage() {
     echo "gabr example <function> -- e.g. gabr example crash"
 }
-fi
+
+function scope() { # lists current function scope in which the function runs -- e.g. gabr example scope
+    IFS=$'\n'
+    for f in ${stack}; do
+        echo "${f:11}"
+    done
+}
+
 
 function passtrough() {
     echo "Passing through" >&2
     gabr
 }
-
-function scope() { # lists current function scope in which the function runs -- e.g. gabr example scope
-    IFS=$'\n'
-    for f in $(declare -F); do
-    echo "${f:11}"
-    done
-}
-
-function die () { # -- e.g. gabr example human die
-    echo "x_x" 1>&2
-    return 1
-}
-
-function crash() { # exemplifies crash prevention depending on GABR_ENV -- e.g. gabr example crash
-    echo Crashing 1>&2
-    false
-    fewf
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-    return $?
-}
-
-function crashinsubshell () ( # -- e.g. gabr example human crashinsubshell
-    crash
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
-function delayeddieinsubshell () ( # -- e.g. gabr example human delayeddieinsubshell
-    dieinsubshell
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
-function dieinsubshell () ( # -- e.g. gabr example human dieinsubshell
-    die
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
-function delayeddieinsubshell () ( # -- e.g. gabr example human delayeddieinsubshell
-    dieinsubshell
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
 
 function passtroughhuman() { # exemplifies recursive gabr calls -- e.g. gabr example passtroughhuman
     echo "Passing through" >&2

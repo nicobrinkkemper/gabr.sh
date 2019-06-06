@@ -17,10 +17,11 @@ function inside your files opens up interesting and clean code patterns with Bas
 ## Hello world
 
 ```shell
+$ mkdir helloworld
 $ echo "\
 function helloworld() {
   echo hello world
-}" > ./helloworld.sh
+}" > ./helloworld/helloworld.sh
 ```
 ```shell
 $ source ./gabr.sh
@@ -28,10 +29,6 @@ $ source ./gabr.sh
 ```shell
 $ gabr helloworld
 hello world
-```
-```shell
-$ rm -rf ./helloworld ./gabr.sh
-$ unset gabr
 ```
 > Fore more examples, see ./example
 
@@ -59,7 +56,7 @@ function owo() {
   echo "I made a oopsy" >&2 
 }" > ./owo.sh
 
-$ gabr owow
+$ gabr owo
 OwO: command not found
 Exitcode 127 prevented, returned 0 instead
 ```
@@ -76,7 +73,8 @@ function inside your files opens up interesting and clean code patterns with Bas
 # "functional" Bash
 Bash isn't a functional language.  Calling functions has a cascading effect. If you call a function within a function, the caller will inherent the functions of the
 called function. Let's illustrate that with a example:
-```
+
+```shell
 function human(){
   echo "That's me" >&2
   function sayhi(){
@@ -99,4 +97,4 @@ laugh # Haha, yes
 > You can paste the code in your Bash terminal to see it in action
 
 Like with CSS, the cascading effect can be problematic. It makes it very nuanced and
-hard to keep your functions pure. You can mitigate this in two ways: subshells, and unset -f. Gabr.sh chooses the latter, but this doesn't prevent you from writing subshell functions, like so `function fn() ( return; )`.
+hard to keep your functions pure. You can mitigate this in two ways: subshells, and `unset -f`. Gabr.sh chooses the latter, but this doesn't prevent you from writing subshell functions, like so `function fn() ( return; )`.

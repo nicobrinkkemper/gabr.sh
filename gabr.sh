@@ -6,13 +6,11 @@
 # - debug           - print detailed internal workings of gabr
 # declare -x GABR_ENV=dev # dev
 
-# GABR_ROOT
-# Alters the directory which to look for functions as last resort
-# - default ($PWD)  - will look in directory where gabr is called
-# declare -x GABR_ROOT=${GABR_ROOT:-$PWD}
+# GABR_ROOT alters the directory which to look for functions as last resort
+# Gabr falls back to source location when below line is uncommented
+# export GABR_ROOT=${GABR_ROOT:-$PWD}
 
-# GABR_DEFAULT
-# Alters the function that is generated and called as last resort
+# GABR_DEFAULT alters the function that is generated and called as last resort
 # A function called 'usage' will print a variable called 'usage'
 # declare -x GABR_DEFAULT=usage
 
@@ -243,6 +241,7 @@ return
         _onScope
         ;;
     file)
+        _debugState PWD dir fn args
         if ! [[ -v args  ]]; then
             _error+=("Can not find a file without args")
             return 1;
@@ -264,11 +263,15 @@ return
                 reuseFn=$prevFn
             fi
             _shiftArgs
-            source $fn # if you crash here, the file errored out!
-            files+=([${fn}]=$fn)
             if [[ -v debug ]]; then
-                echo "$fn is imported" >&2
+                echo "---START-IMPORT-${fn^^}" >&2
+                echo "If you crash here, the file errored out." >&2
             fi
+            source $fn # if you crash here, the file errored out!
+            if [[ -v debug ]]; then
+                echo "---DONE-IMPORT-${fn^^}" >&2
+            fi
+            files+=([${fn}]=$fn)
             if [[ -v reuseFn ]] && [[ $(type -t "$reuseFn") = "function" ]]; then # only reuse the previous argument if the function is there
                 args=($reuseFn ${args[@]}) # 'gabr ./help.sh help' can be reduced to just 'gabr help'
                 if [[ -v debug ]]; then
@@ -306,33 +309,33 @@ return
         if [[ -v debug ]]; then
             echo "Looking for file or directory $fn in $PWD $dir" >&2
         fi 
-        if [[ -f $fn ]]; then                               # allow file
+        if [[ -f $fn ]]; then # allow file
             args=(file $fn ${args[@]})
             if [[ -v debug ]]; then
                 echo "$fn is a full path to a file" >&2
             fi                                
-        elif [[ -f ${dir}/$fn ]]; then                      # allow files in dir
+        elif [[ -f ${dir}/$fn ]]; then # allow files in dir
             args=(file ${dir}/$fn ${args[@]})
             if [[ -v debug ]]; then
                 echo "$fn is a file in $dir" >&2
             fi          
-        elif [[ -f ${dir}/$fn.sh ]]; then                   # allow files omitting .sh
+        elif [[ -f ${dir}/$fn.sh ]]; then # allow files omitting .sh
             args=(file ${dir}/$fn.sh ${args[@]})
             if [[ -v debug ]]; then
                 echo "$fn is a file in $dir and perhaps a function" >&2
-            fi             
-        elif [[ -f  ${dir}/${fn}/$fn.sh ]]; then            # allow dir same as file
+            fi           
+        elif [[ -f  ${dir}/${fn}/$fn.sh ]]; then # allow dir same as file
             args=(file ${dir}/${fn}/$fn.sh ${args[@]})  
             dir+=/$fn
             if [[ -v debug ]]; then
                 echo "$fn is a directory and a file in $dir" >&2
             fi          
-        elif [[ -d $fn ]]; then                             # allow directory
+        elif [[ -d $fn ]]; then # allow directory
             dir+=/$fn 
             if [[ -v debug ]]; then
                 echo "$fn is a directory" >&2
             fi
-        elif ! [[ $dir = . ]]; then                         # allow the same as above, but in current directory
+        elif ! [[ $dir = . ]]; then # allow the same as above, but in current directory
             dir=.
             args=($fn ${args[@]})
             if [[ -v debug ]]; then
