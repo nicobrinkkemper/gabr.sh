@@ -12,6 +12,7 @@ fi
 
 if [[ -f ./node_modules/.bin/bats ]]; then
     function test(){ # -- e.g. gabr bats test
+        trap 'echo done >&2' DEBUG
         ./node_modules/.bin/bats ./${1:-gabr}.bats
     }
 else

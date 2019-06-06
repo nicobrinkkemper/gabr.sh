@@ -1,48 +1,117 @@
 
-@test "gabr returns non error code" {
+@test "Gabr returns non error code" {
     source ./gabr.sh
-    [[ $(gabr >/dev/null && echo $?) -eq 0 ]]
+    gabr debug
+    echo failed-result="\"${?}\"" 1>&2
+    [[ $? -eq 0 ]]
 }
 
-@test "gabr *does* FULLY error out when not defined and ENV is prod" {
-    ENV=prod
-    source ./gabr.sh
-    ! [[ $(gabr undefined >/dev/null || true) ]] || [[ true ]]
+function return127(){
+    exitcode=127
+    return 127
 }
 
-@test "gabr *does not* FULLY error out when not defined and ENV is dev (default)" {
-    ENV=dev
-    source ./gabr.sh
-    [[ $(gabr undefined >/dev/null || true) ]] || [[ true ]]
+function return1(){
+    exitcode=1
+    return 1
 }
 
-@test "gabr *does* error out when not defined and ENV is dev" {
-    ENV=dev
+# BAD FILE
+@test "Gabr errors when a file returns 127" {
     source ./gabr.sh
-    ! [[ $(gabr undefined >/dev/null || true) ]]
-}
-
-@test "sourcing ./gabr.sh only adds gabr function to the scope" {
-    local stack=$(declare -F)
-    source ./gabr.sh
-    local newStack=$(declare -F)
-    [[ $(echo "${stack}" "${stack}" "${newStack}" | tr ' ' '\n' | sort | uniq -u)  = 'gabr' ]] # difference
-}
-
-@test "Running gabr does not add to scope" {
-    local stack=$(declare -F)
-    source ./gabr.sh
+    mkdir -p boo
     echo "\
-function scope(){
-    function notadded(){
-        return;
+spooky
+function spooky(){
+    return 127
+}
+" > boo/boo.sh
+    GABR_ENV=prod
+    result="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}--")"
+    GABR_ENV=dev
+    result+="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}--")"
+    GABR_ENV=debug
+    result+="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}")"
+    echo failed-result="\"${result}\"" 1>&2
+    trap 'rm -rf boo' RETURN
+    [[ $result = "127.127--127.0--127.0" ]]
+}
+
+# UNDEFINED FUNCTION
+@test "gabr errors when a function is undefined" {
+    source ./gabr.sh
+    GABR_ENV=prod
+    result="$(exitcode=0; gabr undefined >/dev/null; echo "${exitcode}.${?}--")" # 1.1--
+    GABR_ENV=dev
+    result+="$(exitcode=0; gabr undefined >/dev/null; echo "${exitcode}.${?}--")" # 1.0--
+    GABR_ENV=debug
+    result+="$(exitcode=0; gabr undefined >/dev/null; echo "${exitcode}.${?}")" # 1.0
+    echo failed-result="\"${result}\"" 1>&2
+    [[ $result = "1.1--1.0--1.0" ]]
+}
+
+# FUNCTION RETURNS 1
+@test "gabr errors when a function returns 1" {
+    source ./gabr.sh
+    GABR_ENV=prod
+    result="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}--")" # 1.1--
+    GABR_ENV=dev
+    result+="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}--")" # 1.0--
+    GABR_ENV=debug
+    result+="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}")" # 1.0
+    echo failed-result="\"${result}\"" 1>&2
+    [[ $result = "1.1--1.0--1.0" ]]
+}
+
+# FUNCTION RETURNS 127 DEV/DEBUG
+@test "Gabr errors when a function returns 127" {
+    local stack=$(declare -F)
+    source ./gabr.sh
+    GABR_ENV=prod
+    result="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}--")" # 127.127--
+    GABR_ENV=dev
+    result+="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}--")" # 127.0--
+    GABR_ENV=debug
+    result+="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}")" # 127.0
+    echo failed-result="\"${result}\"" 1>&2
+    [[ $result = "127.127--127.0--127.0" ]]
+}
+
+@test "gabr does not walk over a error" {
+    GABR_ENV=prod
+    function undefined(){
+        iamnotdefined;
+        declare -x iamnotdefined=iamnotdefined
+        return $?
     }
-    return;
-}" > ./scope.sh
-    gabr scope notadded
-    local newStack=$(gabr scope notadded >/dev/null; declare -F)
-    rm -f ./scope.sh
-    [[ $(echo "${stack}" "${stack}" "${newStack}" | tr ' ' '\n' | sort | uniq -u)  = 'gabr' ]] # difference
+    local exitcode=0 # needs to be set to a variable in order to inherit Gabr's exitcode\
+    source ./gabr.sh
+    if ! gabr undefined; then
+        echo exitcode=$exitcode >&2
+        ! [[ -v iamnotdefined ]]
+    fi
+}
+
+@test "Running and sourcing gabr only adds Gabr to scope" {
+    function diffStack(){
+        difference(){
+            echo "${stack}" "${stack}" "$@" | tr ' ' '\n' | sort | uniq -u;
+        }
+        difference ${@} 
+    }
+    local herestack=$(declare -F -f)
+    source ./gabr.sh
+    local -a result=($(
+        gabr diffStack $(declare -F -f);
+        echo -;
+        gabr diffStack $(declare -F -f)
+        echo -;
+        echo "${herestack}" "${herestack}" "$(declare -F -f)" | tr ' ' '\n' | sort | uniq -u
+    ))
+    local str=$(IFS=$' '; echo ${result[*]})
+    echo failed-result=$str 1>&2
+    [[ $str = "- - gabr" ]]
+
 }
 
 @test "Gabr can find a file and run it's functions" {
@@ -55,7 +124,8 @@ function saybye(){
 }" > ./sayhi.sh
     source ./gabr.sh
     local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
-    rm -f ./sayhi.sh
+    echo failed-result="\"${result}\"" 1>&2
+    trap 'rm -f ./sayhi.sh' RETURN
     [[ $result  = 'hi hi hi bye' ]]
 }
 
@@ -66,7 +136,8 @@ function whatdidisay(){
 }" > ./whatdidisay.sh
     source ./gabr.sh
     local result="$(gabr whatdidisay ' jim ' " has long " " cheeks ")"
-    rm -f ./whatdidisay.sh
+    echo failed-result="\"${result}\"" 1>&2
+    trap 'rm -f ./whatdidisay.sh' RETURN
     [[ $result  = ' jim   has long   cheeks ' ]]
 }
 
@@ -77,29 +148,65 @@ function spectabular(){
 }" > ./spectabular.sh
     source ./gabr.sh
     local result="$(gabr spectabular "$(echo -e '\t')<tabs>$(echo -e '\t')" "<ta$(echo -e '\t')bs>")"
-    rm -f ./spectabular.sh
-    echo result="\"${result}\"" 1>&2
+    echo failed-result="\"${result}\"" 1>&2
+    trap 'rm -f ./spectabular.sh' RETURN
     [[ "$result"  = "<tabs> <ta bs>" ]]
 }
 
+
+@test "Gabr has minimal api when file, directory and function named the same" {
+    mkdir -p 'sophie'
+    echo "\
+function sophie(){
+    echo Sophie
+}" > sophie/sophie.sh
+    source ./gabr.sh
+    local result="$(gabr sophie)"
+    trap 'rm -rf sophie' RETURN
+    [[ "$result"  = "Sophie" ]]
+}
+
+@test "Gabr runs in directory relative to file in which function is called" {
+    mkdir -p 'whereru'
+    echo "\
+function whereru(){
+    echo \${PWD}
+}
+" > whereru/whereru.sh
+    source ./gabr.sh
+    local localPWD=$(pwd)
+    local result="$(gabr whereru)"
+    echo failed-result="\"${result[@]: -8}\"" 1>&2
+    trap 'rm -rf whereru' RETURN
+    [[ "${result[@]: -8}"  = "/whereru" ]]
+}
+
 @test "Gabr can cd to directories and run files" {
-    mkdir -p '.temptest'
+    mkdir -p '.jimtest'
     echo "\
 function jim(){
-    echo .temptest/willem.sh
-}" > .temptest/jim.sh
+    echo jim >&2
+    echo .jimtest/willem.sh 
+}" > .jimtest/jim.sh
 echo "\
-dir+=/.temptest
+dir="\${dir:-.}/.jimtest"
 function willem(){
-    gabr bonito
-}" > .temptest/willem.sh
+    echo willem >&2
+    gabr ./bonito.sh
+}" > .jimtest/willem.sh
 echo "\
 function bonito(){
+    echo bonito >&2
     echo \"de wever\"
-}" > .temptest/bonito.sh
+}" > .jimtest/bonito.sh
     source ./gabr.sh
-    local result="$(gabr $(gabr .temptest jim))"
+    local result="$(gabr $(gabr .jimtest jim))"
     echo result="\"${result}\"" 1>&2
-    rm -rf .temptest
+    echo failed-result="\"${result}\"" 1>&2
+    trap 'rm -rf .jimtest' RETURN
     [[ "$result"  = "de wever" ]]
+}
+
+@test "Gabr fails on overly recursive calls (max 50)" {
+    ! [[ "$(gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr filename)" ]]
 }

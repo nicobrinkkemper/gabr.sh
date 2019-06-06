@@ -1,44 +1,75 @@
-# gabr.sh
-Make your bash functions accessible with one script. Any function in any file can be reached through a simple api that is solely based on the names of your files, directories and functions.
-
-# Installation 
+# Installation
 ```
 wget https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/gabr.sh
 ```
-
-# Hello world
+Or
 ```
-source ./gabr.sh
-echo "\
+git clone git@github.com:nicobrinkkemper/gabr.sh.git 
+```
+
+
+# What is gabr.sh
+gabr.sh is a script to create a command-line program. The names of your directories, files and functions will dictate the api to interact with your program. To call a function with gabr.sh, just type in what you see. Let's illustrate that with a helloworld example.
+
+## Hello world
+
+```shell
+$ echo "\
 function helloworld() {
- echo hello world >&2
-}
-" > ./helloworld.sh
-gabr helloworld
-# remove it
-rm ./helloworld.sh
+  echo hello world
+}" > ./helloworld.sh
 ```
-
-# Strictmode
-Functions you call with gabr.sh will run in strictmode. If you use gabr you don't have to
-put this in every file.
+```shell
+$ source ./gabr.sh
 ```
-declare IFS=$'\n\t'
-set -euo pipefail
+```shell
+$ gabr helloworld
+hello world
 ```
-If you want to learn more about this, I suggest reading:
- - [Use the Unofficial Bash Strict Mode](http://redsymbol.net/articles/unofficial-bash-strict-mode/)
+```shell
+$ rm -rf ./helloworld ./gabr.sh
+$ unset gabr
+```
+> Fore more examples, see ./example
 
 ## Why use Gabr.sh?
-Gabr's purpose is to call functions in files. You give it arguments and it
-tries really hard to turn that argument in to a function call. If it can do so,
-it will promtly run that function with the remaining arguments. After that,
-Gabr cleans up after itself.
 
-## "Functional" Bash Scripts
-Bash isn't a functional language. The way functions work in Bash
-is more akin to CSS. Calling functions has a cascading effect. If you call a
-function within a function, the caller will inherent the functions of the
+ - **Minimal API to reach your functions**
+    Gabr's purpose is to call functions in files. You give it arguments and it
+    tries really hard to turn that argument in to a function call. If it can do so,
+    it will promtly run that function with the remaining arguments. After that,
+    Gabr cleans up after itself and is ready to take on new requests.
+
+ - **Strict mode**
+
+    Functions you call with gabr.sh will run with `set -euo pipefail`. This will stop execution 
+    at the slightest hick-up to prevent bugs from slipping in. Nonetheless, it will run
+    cleanup code after it has crashed, making sure the next time you call your function
+    it is resourced and also that the strict-mode does not stay in effect.
+
+  - **Run globally without global pollution**
+
+    - Only `gabr` will remain in global namespace.
+    - `gabr` does not enter a subshell to run a function
+      - To enter a subshell, use `function()(  )`
+    - Adds `trap "${onCleanUp}" ERR SIGINT` to any function it runs, which enforces
+      clean-up 
+
+  - **Function nesting**
+
+    `FUNCNEST` will be set to 50. Which will restrict recursion. A recursive bash function can crash a machine if not handled correctly. Making mistakes like that with won't be a issue
+    if you always call that function with `gabr` during development.
+
+  - **No global shell polution**
+  
+    Only the `gabr` function and two global variables (`GABR_ROOT`, `GABR_ENV`) will remain in the shell scope after a function is ran.
+
+# "Functional" Bash Scripts
+Gabr.sh allows you to write functional code. If you have a command that you need to
+type in a lot, it's a good candidate to put in to a Bash function.
+
+## Drawbacks
+Bash isn't a functional language.  Calling functions has a cascading effect. If you call a function within a function, the caller will inherent the functions of the
 called function. Let's illustrate that with a example:
 ```
 function human(){
@@ -61,9 +92,20 @@ sayhi # Hi
 laugh # Haha, yes
 ```
 > You can paste the code in your Bash terminal to see it in action
+
+Like with CSS, the cascading effect can be problematic. It makes it very nuanced and
+hard to keep your functions pure. You can mitigate this in two ways: subshells, and unset -f. Gabr.sh chooses the latter, but this doesn't prevent you from writing subshell functions, like so `function fn() ( return; )`.
+
+
+This is true because source is a function. When you source a file, you call a
+function. Gabr facilitates this because it makes it really easy to call files
+as if they were functions. 
+
+## Keeping the names the same
+
+By keeping the names the same, the api to request your functions can stay minimal.
+Consider the following test:
+
 ```
 
-Like CSS, the cascading effect can present many problems. It makes it very nuanced and therefor
-hard to keep your functions pure. You can mitigate this by seeing the file as a function. This is true
-because source is a function. Therefor, when you source a file, you call a function. Gabr facilitates in this
-because it clearly separates scoping from function calling. Gabr scopes files
+```
