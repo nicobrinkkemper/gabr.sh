@@ -33,6 +33,27 @@ function crash() { # exemplifies crash prevention depending on GABR_ENV -- e.g. 
     return $?
 }
 
+function crashinsubshell () ( # -- e.g. gabr example human crashinsubshell
+    crash
+    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+)
+
+function delayeddieinsubshell () ( # -- e.g. gabr example human delayeddieinsubshell
+    dieinsubshell
+    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+)
+
+function dieinsubshell () ( # -- e.g. gabr example human dieinsubshell
+    die
+    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+)
+
+function delayeddieinsubshell () ( # -- e.g. gabr example human delayeddieinsubshell
+    dieinsubshell
+    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+)
+
+
 function passtroughhuman() { # exemplifies recursive gabr calls -- e.g. gabr example passtroughhuman
     echo "Passing through" >&2
     gabr human

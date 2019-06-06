@@ -171,7 +171,7 @@ function _onCleanUp() { # Cleans up all functions added to global scope and retu
         fi
     fi
     if ! [[ $env = prod ]] && [[ $exitcode -ne 0 ]]; then
-        printf "$wrapErr" "exitcode=$exitcode # prevented, returned 0 instead" >&2
+        printf "$wrapErr" "Exitcode $exitcode prevented, returned 0 instead" >&2
         return 0
     else
         if [[ -v debug ]]; then
