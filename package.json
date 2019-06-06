@@ -7,6 +7,9 @@
     "test": "./node_modules/.bin/bats gabr.bats",
     "release": "release-it"
   },
+  "bin": {
+    "gabr": "./gabr.sh"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nicobrinkkemper/gabr.sh.git"

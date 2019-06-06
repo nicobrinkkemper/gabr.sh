@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# GABR_ENV
-# Alters the output and behavior of the script
+# *GABR_ENV* alters the output and behavior of the script
 # - default (dev)   - prevent terminal crash on error
 # - prod            - don't prevent terminal crash on error 
 # - debug           - print detailed internal workings of gabr
 # declare -x GABR_ENV=dev # dev
-
-# GABR_ROOT alters the directory which to look for functions as last resort
+# -
+# *GABR_ROOT* alters the directory which to look for functions as last resort
 # Gabr falls back to source location when below line is uncommented
+# -
 # export GABR_ROOT=${GABR_ROOT:-$PWD}
-
+# -
 # GABR_DEFAULT alters the function that is generated and called as last resort
 # A function called 'usage' will print a variable called 'usage'
 # declare -x GABR_DEFAULT=usage
@@ -241,7 +241,6 @@ return
         _onScope
         ;;
     file)
-        _debugState PWD dir fn args
         if ! [[ -v args  ]]; then
             _error+=("Can not find a file without args")
             return 1;
