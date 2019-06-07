@@ -4,7 +4,8 @@ wget https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/gabr.sh
 ```
 Or
 ```
-git clone git@github.com:nicobrinkkemper/gabr.sh.git 
+npm install gabr.sh
+npm link
 ```
 
 

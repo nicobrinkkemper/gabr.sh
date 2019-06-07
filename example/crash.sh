@@ -1,19 +1,31 @@
+if ! [[ -v args ]]; then
+# when no arguments given, examplifies a crashing file
+echo Crashing 1>&2
+notfound
+echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+return $?
+fi
+
+function badarray() {
+   set -E
+   mapfile foo < <(true; echo foo)
+   echo ${foo[-1]} # foo
+   mapfile foo < <(false; echo foo)
+   echo ${foo[-1]} # bash: foo: bad arr
+}
 
 function die () { # -- e.g. gabr example human die
     echo "x_x" 1>&2
     return 1
 }
 
-function crash() { # exemplifies crash prevention depending on GABR_ENV -- e.g. gabr example crash
-    echo Crashing 1>&2
-    notfound
-    fewf
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-    return $?
-}
-
 function crashinsubshell () ( # -- e.g. gabr example human crashinsubshell
-    crash
+    notfound
+    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+)
+
+function delayedcrashinsubshell () ( # -- e.g. gabr example human crashinsubshell
+    crashinsubshell
     echo "Should stop at first hick-up, you shouldn't see this" 1>&2
 )
 
