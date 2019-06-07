@@ -62,19 +62,16 @@ spooky
     echo failed-status-prod="\"${status}\"" 1>&2
     echo failed-status-exitcode="\"${exitcode}\"" 1>&2
     [[ "$status" -eq 1 ]]
-    [[ "$exitcode" -eq 1 ]]
     GABR_ENV=dev
     exitcode=0;
     run gabr undefined;
     echo failed-status-dev="\"${status}\"" 1>&2
     [[ "$status" -eq 1 ]]
-    [[ "$exitcode" -eq 1 ]]
     GABR_ENV=debug
     exitcode=0;
     run gabr undefined;
     echo failed-status-debug="\"${status}\"" 1>&2
     [[ "$status" -eq 1 ]]
-    [[ "$exitcode" -eq 1 ]]
 }
 
 # FUNCTION RETURNS 1
