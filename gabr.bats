@@ -1,7 +1,7 @@
 
 @test "Gabr returns non error code" {
     source ./gabr.sh
-    gabr debug
+    gabr
     echo failed-result="\"${?}\"" 1>&2
     [[ $? -eq 0 ]]
 }
@@ -16,15 +16,31 @@ function return1(){
     return 1
 }
 
-# BAD FILE
-@test "Gabr errors when a file returns 127" {
+@test "Gabr errors the same return code" {
     source ./gabr.sh
     mkdir -p boo
     echo "\
-spooky
-function spooky(){
-    return 127
+function boo(){
+    echo boo >&2
+    return 123
 }
+" > boo/boo.sh
+    source ./boo/boo.sh
+    GABR_ENV=prod
+    run gabr boo
+    GABR_ENV=dev
+    run gabr boo
+    [[ "$status" -eq 123 ]]
+    result=$(gabr wah || echo $?)
+    [[ "$result" -eq 1 ]]
+}
+
+
+@test "Gabr global errors when a file returns 127" {
+    source ./gabrdebug.sh
+    mkdir -p boo
+    echo "\
+spooky
 " > boo/boo.sh
     GABR_ENV=prod
     result="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}--")"
@@ -38,21 +54,29 @@ function spooky(){
 }
 
 # UNDEFINED FUNCTION
-@test "gabr errors when a function is undefined" {
+@test "gabrdebug errors when a function is undefined" {
     source ./gabr.sh
     GABR_ENV=prod
-    result="$(exitcode=0; gabr undefined >/dev/null; echo "${exitcode}.${?}--")" # 1.1--
+    exitcode=0;
+    run gabr undefined;
+    echo failed-status-prod="\"${status}\"" 1>&2
+    echo failed-status-exitcode="\"${exitcode}\"" 1>&2
+    [[ "$status" -eq 1 ]]
     GABR_ENV=dev
-    result+="$(exitcode=0; gabr undefined >/dev/null; echo "${exitcode}.${?}--")" # 1.0--
+    exitcode=0;
+    run gabr undefined;
+    echo failed-status-dev="\"${status}\"" 1>&2
+    [[ "$status" -eq 1 ]]
     GABR_ENV=debug
-    result+="$(exitcode=0; gabr undefined >/dev/null; echo "${exitcode}.${?}")" # 1.0
-    echo failed-result="\"${result}\"" 1>&2
-    [[ $result = "1.1--1.0--1.0" ]]
+    exitcode=0;
+    run gabr undefined;
+    echo failed-status-debug="\"${status}\"" 1>&2
+    [[ "$status" -eq 1 ]]
 }
 
 # FUNCTION RETURNS 1
-@test "gabr errors when a function returns 1" {
-    source ./gabr.sh
+@test "gabrdebug errors when a function returns 1" {
+    source ./gabrdebug.sh
     GABR_ENV=prod
     result="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}--")" # 1.1--
     GABR_ENV=dev
@@ -64,9 +88,9 @@ function spooky(){
 }
 
 # FUNCTION RETURNS 127 DEV/DEBUG
-@test "Gabr errors when a function returns 127" {
+@test "gabrdebug errors when a function returns 127" {
     local stack=$(declare -F)
-    source ./gabr.sh
+    source ./gabrdebug.sh
     GABR_ENV=prod
     result="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}--")" # 127.127--
     GABR_ENV=dev
@@ -86,10 +110,8 @@ function spooky(){
     }
     local exitcode=0 # needs to be set to a variable in order to inherit Gabr's exitcode\
     source ./gabr.sh
-    if ! gabr undefined; then
-        echo exitcode=$exitcode >&2
-        ! [[ -v iamnotdefined ]]
-    fi
+    run gabr undefined;
+    ! [[ -v iamnotdefined ]]
 }
 
 @test "Running and sourcing gabr only adds Gabr to scope" {
