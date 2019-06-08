@@ -44,24 +44,6 @@ Gabr's purpose is to call functions in files. You give it arguments and it
 tries really hard to turn that argument in to a function call. If the names are the
 same, you only have to type it once.
 
-### Strict mode
-Functions you call with `gabr.sh` will run with `set -euo pipefail`. This will stop execution 
-at the slightest hick-up to prevent bugs from slipping in. Nonetheless, it will run
-cleanup code on completion and prevent actual terminal exit when `GABR_ENV` is not `prod`.
-
-```shell
-$ echo "\
-function owo() {
-  OwO
-  # This wil not be ran
-  echo "I made a oopsy" >&2 
-}" > ./owo.sh
-
-$ gabr owo
-OwO: command not found
-Exitcode 127 prevented, returned 0 instead
-```
-
 ### Function nesting
 `gabr` allows to loop back to itself. `FUNCNEST` is set to 50, as to not worry about recursion problems.
 
