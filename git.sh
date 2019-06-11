@@ -1,15 +1,29 @@
+
+function currentBranch() {
+    local branch
+    branch="$(git symbolic-ref HEAD 2>/dev/null)" || branch="undefined"
+    branch=${branch##refs/heads/}
+    echo $branch
+}
+
 function root(){
     command git rev-parse --show-toplevel
 }
 
-function removeAllButMasterAndCurrentBranchLocally() {
-    git branch --no-color | egrep -v "(master|\*)" | xargs git branch -D
+function branchRef() {
+    command git symbolic-ref HEAD
 }
 
-function removeAllButRemoteMaster() {
-    git remote update -p &&
-    git branch -r --no-color --merged origin/master |
-    grep origin |
-    grep -v master |
-    cut -d"/" -f2- |
+function deleteBranch() {
+    git branch -d $branch
+    git branch -D $branch
 }
+
+function deleteBranch() {
+    git branch -d $1
+    git branch -D $1
+}
+
+if ! [[ -v branch ]]; then
+    declare branch=$(currentBranch)
+fi
