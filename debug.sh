@@ -21,7 +21,7 @@
 # declare -x GABR_DEFAULT=${GABR_DEFAULT:-"usage"} 
 trap - ERR SIGINT
 trap '' ERR SIGINT
-function gabr() { # Run a variety of bash functions inside this git repo
+function debug() { # Run a variety of bash functions inside this git repo
 FUNCNEST=50
 # Strictmode - stop at slightest hick-up
 set -euo pipefail
@@ -455,13 +455,3 @@ else
     fi
     return ${exitcode:-1}
 fi
-return # end of gabr function
-}
-
-# Run the function when the file is ran
-if [[ "$0" = "$BASH_SOURCE" ]]; then
-    declare IFS=$'\n\t'
-    gabr ${*}
-fi
-
-# That's it folks

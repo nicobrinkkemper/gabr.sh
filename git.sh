@@ -7,5 +7,9 @@ function removeAllButMasterAndCurrentBranchLocally() {
 }
 
 function removeAllButRemoteMaster() {
-    git branch -r --merged origin/master | grep -v master | grep "origin/" | cut -d "/" -f 3- | xargs -n 20 git push --delete origin
+    git remote update -p &&
+    git branch -r --merged origin/master |
+    grep origin |
+    grep -v master |
+    cut -d"/" -f2- |
 }

@@ -17,38 +17,21 @@
 # Valid string:
 #    - Any function name, e.g. help, usage, info
 
-function gabr(){
-    set -Euo pipefail
-    local IFS=$'\n\t'
-    trap 'exitcode=$?; if ! [[ $exitcode -eq 0  ]] && ! [[ $env = prod ]]; then echo "return $exitcode prevented" 1>&2; return 0; fi; return $exitcode' ERR SIGINT
-    trap 'exitcode=${exitcode:-${?}}' RETURN
-    FUNCNEST=50
+function gabr(){  # Runs any function in any file through a short api based on the names of local files, directories and functions -- gabr <directory | file | function> <arguments>
+    if ! [[ -v funcname ]]; then
+        local -a funcname=(${FUNCNAME[@]})
+    fi
+    if ! [[ -v filename ]]; then
+        local filename
+    fi
+    if ! [[ -v pathJuggle ]]; then
+        local pathJuggle
+    fi
     if ! [[ -v exitcode ]]; then
         local exitcode
     fi
-    if ! [[ -v pwd ]]; then
-        local pwd="${PWD}"
-    fi
-    if ! [[ -v default ]]; then
-        local default=usage # The default function name to fall back to when no functions are found
-        if [[ -v GABR_DEFAULT ]]; then
-            default=$GABR_DEFAULT
-        fi
-    fi
-    if ! [[ -v root ]]; then
-        local root=$PWD
-        if [[ -v GABR_ROOT ]]; then
-            root=$GABR_ROOT
-        fi
-    fi
     if ! [[ -v args ]]; then
         local -a args=()
-    fi
-    if ! [[ -v stack ]]; then
-        local stack=$(declare -F)
-    fi
-    if ! [[ -v funcstack ]]; then
-        local -a funcstack=(${FUNCNAME[@]})
     fi
     if ! [[ -v debug ]]; then
         local -a debug=()
@@ -57,16 +40,13 @@ function gabr(){
         local fn
     fi
     if ! [[ -v wrapErr ]]; then
-        local wrapErr=$'\033[0;91m'%s$'\033[0m\n' # printfn LightRed with newline -- e.g. printfn ${wrapErr} "Error"
+        local wrapErr=$'\033[0;91m'"Warning: "%s$'\033[0m\n' # printfn LightRed with newline -- e.g. printfn ${wrapErr} "something went wrong"
     fi
     if ! [[ -v _error ]]; then
         local -a _error=()
     fi
     if ! [[ -v dir ]]; then
         local dir=.
-    fi
-    if ! [[ -v $default ]]; then
-        local $default="${FUNCNAME} <dir | filename | function> <arguments> - e.g. ${FUNCNAME} usage"
     fi
     if ! [[ -v primaryFn ]]; then
         local primaryFn=${1:-}
@@ -76,27 +56,52 @@ function gabr(){
     fi
     if ! [[ -v env ]]; then
         local env=dev
-        if [[ -v GABR_ENV ]]; then
-            env=$GABR_ENV
-        fi
+    fi
+    if ! [[ -v pwd ]]; then
+        local pwd="${PWD}"
+    fi
+    # Set from globals
+    if [[ -v GABR_ROOT ]]; then
+        root=$GABR_ROOT # Optionally set a fixed root through a global
+    fi
+    if [[ -v GABR_ENV ]]; then
+        env=$GABR_ENV
+    fi
+    if [[ -v GABR_DEFAULT ]]; then
+        default=$GABR_DEFAULT # Optionally set a fixed namespace for 'usage' functionality
+    fi
+    if [[ $env = prod ]]; then
+        set -euo pipefail # this will crash terminal on error
+    fi
+    if ! [[ -v default ]]; then
+        local default=usage # By default a function called 'usage' prints a variable called 'usage' through variable expansion
+    fi
+    if ! [[ -v root ]]; then
+        local root=$PWD
     fi
     if ! [[ -v $default ]]; then
-        local $default="${FUNCNAME} <dir | filename | function> <arguments> - e.g. ${FUNCNAME} usage"
+        local $default="Usage: ${FUNCNAME} <directory | filename | function> <arguments> - e.g. ${FUNCNAME} usage"
     fi
-    (
-    eval "\
+    if ! [[ -v stack ]]; then
+        local stack=$(declare -F)
+    fi
+( # @enter subshell
+    local IFS=$'\n\t'
+    if [[ $env = dev ]] || [[ $env = debug ]]; then
+        set -Euo pipefail
+    fi
+    trap 'exitcode=$?; if [[ -v _error ]]; then _error+=("${prevFn} ${fn} returned exitcode $exitcode"); fi; cd $pwd; return $exitcode' ERR SIGINT
+    trap 'if [[ -v _error ]] && [[ ${#_error[@]} -ne 0 ]]; then printf "$wrapErr" "${_error[*]}" >&2; fi; exitcode=${exitcode:-${?}}' RETURN
+    if ! [[ $(type -t $default) = function ]]; then
+        eval "\
 $default(){
     echo \"\${!default}\" >&2
 }";
+    fi
     if [ $# -eq 0 ]; then
         usage
         return;
     fi
-    function _filename() ( # -- get the filename from a path
-        local path="${1:-}"
-        local juggle=${path##*/}
-        echo ${juggle%%.*}
-    )
     local prevFn=''
     while [[ $# -ne 0 ]];
     do
@@ -105,7 +110,8 @@ $default(){
         fi
         fn=${1:-$default}; shift; args=(${@});
         if [[ -v debug ]]; then
-            echo "#___$(_filename ${fn^^})___" >&2
+            echo "# ___FN___" >&2
+            echo "# ${fn}" >&2 
             if [[ ${#args[@]} -ne 0 ]]; then
                 echo "# $(IFS=$'-'; echo ${args[@]}) " >&2
             fi
@@ -114,35 +120,39 @@ $default(){
             break
         elif [[ ${fn::2} = '--' ]]; then
             if [[ ${fn^^} = '--FILE' ]] || [[ ${fn^^} = '--DERIVE' ]]; then
+                
                 if ! [[ -v args  ]]; then
-                    _error+=("Can not find a file without args")
-                    echo ${_error[*]} 1>&2
+                    _error+=("Can not find a file without arguments")
+                    printf "$wrapErr" "${_error[*]}" 1>&2
                     return 1;
                 elif  ! [[ -r ${args} ]]; then
                     _error+=("File not found: ${args}")
-                    echo ${_error[*]} 1>&2
+                    printf "$wrapErr" "${_error[*]}" 1>&2
                     return 1;
                 elif [[ -v files[$args] ]]; then
                     _error+=("File already imported: ${args}")
-                    echo ${_error[*]} 1>&2
+                    printf "$wrapErr" "${_error[*]}" 1>&2
                     return 1
                 else
-                    if [[ -v debug ]]; then
-                        echo "# SOURCING $(_filename ${args^^})---" >&2
-                    fi
                     prevFn=$fn
                     fn=$1; shift; args=(${@});
+                    pathJuggle=${fn##*/}
+                    filename=${pathJuggle%%.*}
                     files+=([$fn]=$fn)
                     source $fn
-                    if [[ $(type -t $(_filename $fn)) = function ]]; then
+                    if [[ -v debug ]]; then
+                        echo "# ___FILENAME___" >&2
+                        echo "# ${filename}" >&2
+                    fi
+                    if [[ $(type -t ${filename}) = function ]]; then
                         if [[ ${prevFn^^} = '--DERIVE' ]] || ! [[ -v args ]] || [[ ${args::1} = '-' ]]; then
                             if [[ -v debug ]]; then
-                                echo "# DERIVED ${fn^^}" >&2
+                                echo "# Derived: ${fn}" >&2
                             fi
-                            set -- $(_filename $fn) ${args[@]}
+                            set -- ${filename} ${args[@]}
                         fi
                     elif [[ -v debug ]]; then
-                        echo "# READ $(_filename ${args^^})---" >&2
+                        echo "# Sourced: ${fn^^}" >&2
                     fi
                 fi
             fi
@@ -152,8 +162,8 @@ $default(){
             fi
             cd $dir
             dir=.
-            $fn ${args[@]}
-            exitcode=$?
+            $fn ${args[@]};
+            cd $pwd
             return $?
         elif [[ -f $fn ]]; then # allow file
             set -- --file $fn ${args[@]}
@@ -169,7 +179,7 @@ $default(){
             set -- --derive ${dir}/$fn.sh ${args[@]}
             if [[ -v debug ]]; then
                 echo "$fn is a file in $dir and perhaps a function" >&2
-            fi           
+            fi
         elif [[ -f  ${dir}/${fn}/$fn.sh ]]; then # allow dir same as file
             set -- --derive ${dir}/${fn}/$fn.sh ${args[@]}
             dir+=/$fn
@@ -194,13 +204,15 @@ $default(){
                 echo "Nothing found, switched to root as last resort" >&2
             fi                  
         else
-            _error+=("${fn} is not a valid option.")
-            echo ${_error[*]} 1>&2
+            _error+=("${fn} is not a file, directory or function.")
+            printf "$wrapErr" "${_error[*]}" 1>&2
+            $default
             return 1
         fi
     done
-    )
     return;
+# @close subshell
+)
 }
 
 if [[ "$0" = "$BASH_SOURCE" ]]; then

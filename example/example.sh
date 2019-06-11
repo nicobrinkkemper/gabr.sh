@@ -4,7 +4,7 @@ function example(){ #
 }
 else
 usage() {
-    echo "gabr example <function> -- e.g. gabr example crash"
+    echo "Usage: gabr example <function> -- e.g. gabr example crash"
 }
 fi
 

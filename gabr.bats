@@ -27,17 +27,18 @@ function boo(){
 " > boo/boo.sh
     GABR_ENV=dev
     run gabr boo
-    echo failed-status="\"${status}\"" 1>&2
-    [[ "$status" -eq 0 ]]
+    echo failed-status-dev="\"${status}\"" 1>&2
+    [[ "$status" -eq 123 ]]
     GABR_ENV=debug
     run gabr boo
-    [[ "$status" -eq 0 ]]
+    echo failed-status-debug="\"${status}\"" 1>&2
+    [[ "$status" -eq 123 ]]
     GABR_ENV=prod
     run gabr boo
+    echo failed-status-prod="\"${status}\"" 1>&2
     [[ "$status" -eq 123 ]]
     trap 'rm -rf ./boo' RETURN
 }
-
 
 @test "Gabr global errors when a file returns 127" {
     source ./gabr.sh
@@ -47,56 +48,74 @@ spooky
 " > spooky/spooky.sh
     GABR_ENV=dev
     run gabr spooky
-    [[ "$status" -eq 0 ]]
+    echo failed-status-dev="\"${status}\"" 1>&2
+    [[ "$status" -eq 127 ]]
     GABR_ENV=debug
     run gabr spooky
-    [[ "$status" -eq 0 ]]
+    echo failed-status-debug="\"${status}\"" 1>&2
+    [[ "$status" -eq 127 ]]
     GABR_ENV=prod
     run gabr spooky
+    echo failed-status-prod="\"${status}\"" 1>&2
     [[ "$status" -eq 127 ]]
     trap 'rm -rf ./spooky' RETURN
 }
 
-# UNDEFINED FUNCTION
-@test "gabr errors when a function is undefined and returns 1 when env=prod" {
+@test "gabr errors when a function is undefined" {
     source ./gabr.sh
     GABR_ENV=dev
     run gabr undefined
-    [[ "$status" -eq 0 ]]
+    echo failed-status-dev="\"${status}\"" 1>&2
+    [[ "$status" -eq 1 ]]
     GABR_ENV=debug
     run gabr undefined
-    [[ "$status" -eq 0 ]]
+    echo failed-status-debug="\"${status}\"" 1>&2
+    [[ "$status" -eq 1 ]]
     GABR_ENV=prod
     run gabr undefined
+    echo failed-status-prod="\"${status}\"" 1>&2
     [[ "$status" -eq 1 ]]
 }
 
-# FUNCTION RETURNS 1
-@test "gabr errors when a function returns 1 and returns 1 when env=prod" {
+@test "gabr errors when a function returns 1" {
     source ./gabr.sh
     GABR_ENV=dev
     run gabr return1
-    [[ "$status" -eq 0 ]]
+    [[ "$status" -eq 1 ]]
     GABR_ENV=debug
     run gabr return1
-    [[ "$status" -eq 0 ]]
+    [[ "$status" -eq 1 ]]
     GABR_ENV=prod
     run gabr return1
     [[ "$status" -eq 1 ]]
 }
 
-# FUNCTION RETURNS 127 DEV/DEBUG
-@test "gabr errors when a function returns 127 and returns 127 when env=prod" {
+@test "gabr errors when a function returns 127" {
     source ./gabr.sh
     GABR_ENV=dev
     run gabr return127
-    [[ "$status" -eq 0 ]]
-    GABR_ENV=debug
-    run gabr return127
-    [[ "$status" -eq 0 ]]
-    GABR_ENV=prod
-    run gabr return127
+    echo failed-status-dev="\"${status}\"" 1>&2
     [[ "$status" -eq 127 ]]
+    GABR_ENV=debug
+    run gabr return127
+    echo failed-status-debug="\"${status}\"" 1>&2
+    [[ "$status" -eq 127 ]]
+    GABR_ENV=prod
+    run gabr return127
+    echo failed-status-prod="\"${status}\"" 1>&2
+    [[ "$status" -eq 127 ]]
+}
+
+@test "gabr crashes shell when env is prod" {
+    source ./gabr.sh
+    GABR_ENV=dev
+    result="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))"
+    GABR_ENV=debug
+    result+="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))"
+    GABR_ENV=prod
+    result+="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))" # can not print exit code due to crash of shell
+    echo failed-result="\"${result}\"" 1>&2
+    [[ $result = "1-dev_1-debug_" ]]
 }
 
 @test "gabr does not walk over a error" {

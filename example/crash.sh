@@ -1,17 +1,16 @@
 if ! [[ -v args ]]; then
 # when no arguments given, examplifies a crashing file
 echo Crashing 1>&2
-notfound
+thiscommandisnotfound
 echo "Should stop at first hick-up, you shouldn't see this" 1>&2
 return $?
 fi
 
 function badarray() {
-   set -E
-   mapfile foo < <(true; echo foo)
-   echo ${foo[-1]} # foo
-   mapfile foo < <(false; echo foo)
-   echo ${foo[-1]} # bash: foo: bad arr
+    mapfile foo < <(true; echo foo)
+    echo ${foo[-1]:-} >&2 # foo
+    mapfile foo < <(false; echo foo)
+    echo ${foo[-1]:-} >&2 # will print: ./example/crash.sh: line 13: foo: bad array subscript
 }
 
 function subshellErr() {
