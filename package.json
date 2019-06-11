@@ -32,6 +32,6 @@
   "homepage": "https://github.com/nicobrinkkemper/gabr.sh#readme",
   "devDependencies": {
     "bats": "^1.1.0",
-    "release-it": "^12.2.2"
+    "release-it": "^12.3.0"
   }
 }
