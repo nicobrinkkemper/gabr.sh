@@ -1,6 +1,27 @@
+#!/usr/bin/env bash
+# GABR_ENV/env
+# Alters the output and behavior of the script.
+# Valid string:
+#   - default (dev)   - prevent terminal crash on error
+#   - debug           - same as default, but print detailed internal workings of gabr
+#   - prod            - don't prevent terminal crash on error 
+
+# GABR_ROOT/root
+# Alters the directory which to look for functions as last resort
+# Valid string:
+#    - Valid path to directory. e.g. ./scripts, $PWD, ~/
+
+# GABR_DEFAULT/default
+# Alters the function that is generated and called as last resort
+# By default, a  generated function called 'usage' will print a generated variable called 'usage'
+#    - Any function name, e.g. help, usage, info
+
 function gabr(){
-    FUNCNEST=50
+    set -Euo pipefail
     local IFS=$'\n\t'
+    trap 'exitcode=$?; if ! [[ $exitcode -eq 0  ]] && ! [[ $env = prod ]]; then echo "return $exitcode prevented" 1>&2; return 0; fi; return $exitcode' ERR SIGINT
+    trap 'exitcode=${exitcode:-${?}}' RETURN
+    FUNCNEST=50
     if ! [[ -v exitcode ]]; then
         local exitcode
     fi
@@ -53,15 +74,19 @@ function gabr(){
         local -A files=()
     fi
     if ! [[ -v env ]]; then
-        local env=${GABR_ENV:-'dev'}
+        local env=dev
+        if [[ -v GABR_ENV ]]; then
+            env=$GABR_ENV
+        fi
     fi
-    set -Euo errtrace
-    trap 'exitcode=$?; return $exitcode' ERR SIGINT
-    trap 'exitcode=${exitcode:-${?}}' RETURN
+    if ! [[ -v $default ]]; then
+        local $default="${FUNCNAME} <dir | filename | function> <arguments> - e.g. ${FUNCNAME} usage"
+    fi
     (
-    function usage(){
-        echo "Usage: gabr <file> <function>" >&2
-    }
+    eval "\
+$default(){
+    echo \"\${!default}\" >&2
+}";
     if [ $# -eq 0 ]; then
         usage
         return;
@@ -77,7 +102,7 @@ function gabr(){
         if [[ -v fn ]]; then
             prevFn=$fn
         fi
-        fn=${1:-usage}; shift; args=(${@});
+        fn=${1:-$default}; shift; args=(${@});
         if [[ -v debug ]]; then
             echo "#___$(_filename ${fn^^})___" >&2
             if [[ ${#args[@]} -ne 0 ]]; then

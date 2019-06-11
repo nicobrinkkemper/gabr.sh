@@ -1,9 +1,9 @@
 
 @test "Gabr returns non error code" {
     source ./gabr.sh
-    gabr
-    echo failed-result="\"${?}\"" 1>&2
-    [[ $? -eq 0 ]]
+    run gabr
+    echo failed-status="\"${status}\"" 1>&2
+    [[ $status -eq 0 ]]
 }
 
 function return127(){
@@ -25,84 +25,81 @@ function boo(){
     return 123
 }
 " > boo/boo.sh
-    source ./boo/boo.sh
-    GABR_ENV=prod
-    run gabr boo
     GABR_ENV=dev
     run gabr boo
+    echo failed-status="\"${status}\"" 1>&2
+    [[ "$status" -eq 0 ]]
+    GABR_ENV=debug
+    run gabr boo
+    [[ "$status" -eq 0 ]]
+    GABR_ENV=prod
+    run gabr boo
     [[ "$status" -eq 123 ]]
-    result=$(gabr wah || echo $?)
-    [[ "$result" -eq 1 ]]
+    trap 'rm -rf ./boo' RETURN
 }
 
 
 @test "Gabr global errors when a file returns 127" {
-    source ./gabrdebug.sh
-    mkdir -p boo
+    source ./gabr.sh
+    mkdir -p spooky
     echo "\
 spooky
-" > boo/boo.sh
-    GABR_ENV=prod
-    result="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}--")"
+" > spooky/spooky.sh
     GABR_ENV=dev
-    result+="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}--")"
+    run gabr spooky
+    [[ "$status" -eq 0 ]]
     GABR_ENV=debug
-    result+="$(exitcode=0; gabr boo >/dev/null; echo "${exitcode}.${?}")"
-    echo failed-result="\"${result}\"" 1>&2
-    trap 'rm -rf boo' RETURN
-    [[ $result = "127.127--127.0--127.0" ]]
+    run gabr spooky
+    [[ "$status" -eq 0 ]]
+    GABR_ENV=prod
+    run gabr spooky
+    [[ "$status" -eq 127 ]]
+    trap 'rm -rf ./spooky' RETURN
 }
 
 # UNDEFINED FUNCTION
-@test "gabrdebug errors when a function is undefined" {
+@test "gabr errors when a function is undefined and returns 1 when env=prod" {
     source ./gabr.sh
-    GABR_ENV=prod
-    exitcode=0;
-    run gabr undefined;
-    echo failed-status-prod="\"${status}\"" 1>&2
-    echo failed-status-exitcode="\"${exitcode}\"" 1>&2
-    [[ "$status" -eq 1 ]]
     GABR_ENV=dev
-    exitcode=0;
-    run gabr undefined;
-    echo failed-status-dev="\"${status}\"" 1>&2
-    [[ "$status" -eq 1 ]]
+    run gabr undefined
+    [[ "$status" -eq 0 ]]
     GABR_ENV=debug
-    exitcode=0;
-    run gabr undefined;
-    echo failed-status-debug="\"${status}\"" 1>&2
+    run gabr undefined
+    [[ "$status" -eq 0 ]]
+    GABR_ENV=prod
+    run gabr undefined
     [[ "$status" -eq 1 ]]
 }
 
 # FUNCTION RETURNS 1
-@test "gabrdebug errors when a function returns 1" {
-    source ./gabrdebug.sh
-    GABR_ENV=prod
-    result="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}--")" # 1.1--
+@test "gabr errors when a function returns 1 and returns 1 when env=prod" {
+    source ./gabr.sh
     GABR_ENV=dev
-    result+="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}--")" # 1.0--
+    run gabr return1
+    [[ "$status" -eq 0 ]]
     GABR_ENV=debug
-    result+="$(exitcode=0; gabr return1 >/dev/null; echo "${exitcode}.${?}")" # 1.0
-    echo failed-result="\"${result}\"" 1>&2
-    [[ $result = "1.1--1.0--1.0" ]]
+    run gabr return1
+    [[ "$status" -eq 0 ]]
+    GABR_ENV=prod
+    run gabr return1
+    [[ "$status" -eq 1 ]]
 }
 
 # FUNCTION RETURNS 127 DEV/DEBUG
-@test "gabrdebug errors when a function returns 127" {
-    local stack=$(declare -F)
-    source ./gabrdebug.sh
-    GABR_ENV=prod
-    result="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}--")" # 127.127--
+@test "gabr errors when a function returns 127 and returns 127 when env=prod" {
+    source ./gabr.sh
     GABR_ENV=dev
-    result+="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}--")" # 127.0--
+    run gabr return127
+    [[ "$status" -eq 0 ]]
     GABR_ENV=debug
-    result+="$(exitcode=0; gabr return127 >/dev/null; echo "${exitcode}.${?}")" # 127.0
-    echo failed-result="\"${result}\"" 1>&2
-    [[ $result = "127.127--127.0--127.0" ]]
+    run gabr return127
+    [[ "$status" -eq 0 ]]
+    GABR_ENV=prod
+    run gabr return127
+    [[ "$status" -eq 127 ]]
 }
 
 @test "gabr does not walk over a error" {
-    GABR_ENV=prod
     function undefined(){
         iamnotdefined;
         declare -x iamnotdefined=iamnotdefined
@@ -110,6 +107,13 @@ spooky
     }
     local exitcode=0 # needs to be set to a variable in order to inherit Gabr's exitcode\
     source ./gabr.sh
+    GABR_ENV=dev
+    run gabr undefined;
+    ! [[ -v iamnotdefined ]]
+    GABR_ENV=debug
+    run gabr undefined;
+    ! [[ -v iamnotdefined ]]
+    GABR_ENV=prod
     run gabr undefined;
     ! [[ -v iamnotdefined ]]
 }

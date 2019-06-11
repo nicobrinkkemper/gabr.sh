@@ -1,2 +1,0 @@
-
-source owo.sh
