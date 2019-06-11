@@ -9,11 +9,12 @@
 # GABR_ROOT/root
 # Alters the directory which to look for functions as last resort
 # Valid string:
-#    - Valid path to directory. e.g. ./scripts, $PWD, ~/
+#    - Valid path to directory. e.g. ./scripts, $PWD, ~/Code/project
 
 # GABR_DEFAULT/default
 # Alters the function that is generated and called as last resort
-# By default, a  generated function called 'usage' will print a generated variable called 'usage'
+# By default, a generated function called 'usage' will print a generated variable called 'usage'
+# Valid string:
 #    - Any function name, e.g. help, usage, info
 
 function gabr(){
