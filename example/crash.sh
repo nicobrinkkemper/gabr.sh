@@ -14,6 +14,14 @@ function badarray() {
    echo ${foo[-1]} # bash: foo: bad arr
 }
 
+function subshellErr() {
+    set -e
+    mapfile foo < <(true; echo foo)
+    echo ${foo[-1]} # foo
+    mapfile foo < <(false; echo foo)
+    echo ${foo[-1]} # bash: foo: bad array subscript
+}
+
 function die () { # -- e.g. gabr example human die
     echo "x_x" 1>&2
     return 1
