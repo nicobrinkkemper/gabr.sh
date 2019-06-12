@@ -1,6 +1,6 @@
 function release() {
-    git add .
-    git commit -m ${1:-"New release will bump ${version:-}"}
+    git add . || 'Nothing to add'
+    git commit -m ${1:-"New release will bump ${version:-}"} || 'Nothing to commit'
     npm test && npm run release
 }
 
