@@ -1,54 +1,22 @@
-if ! [[ -v args ]]; then
-# when no arguments given, examplifies a crashing file
-echo Crashing 1>&2
-thiscommandisnotfound
-echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-return $?
-fi
-
-function badarray() {
+function badarray() { # -- e.g. gabr example badarray; echo $?
     mapfile foo < <(true; echo foo)
     echo ${foo[-1]:-} >&2 # foo
     mapfile foo < <(false; echo foo)
-    echo ${foo[-1]:-} >&2 # will print: ./example/crash.sh: line 13: foo: bad array subscript
+    echo ${foo[-1]:-} >&2 # will print: ./example/crash.sh: line 15: foo: bad array subscript
 }
 
-function subshellErr() {
-    set -e
-    mapfile foo < <(true; echo foo)
-    echo ${foo[-1]} # foo
-    mapfile foo < <(false; echo foo)
-    echo ${foo[-1]} # bash: foo: bad array subscript
-}
-
-function die () { # -- e.g. gabr example human die
+function die () { # -- e.g. gabr example crash die; echo $?
     echo "x_x" 1>&2
     return 1
 }
 
-function crashinsubshell () ( # -- e.g. gabr example human crashinsubshell
-    notfound
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
+function notfound () { # -- e.g. gabr example crash die; echo $?
+    thiscommandisnotfound
+}
 
-function delayedcrashinsubshell () ( # -- e.g. gabr example human crashinsubshell
-    crashinsubshell
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
-function delayeddieinsubshell () ( # -- e.g. gabr example human delayeddieinsubshell
-    sleep 1
-    dieinsubshell
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
-function dieinsubshell () ( # -- e.g. gabr example human dieinsubshell
-    die
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
-
-function delayeddieinsubshell () ( # -- e.g. gabr example human delayeddieinsubshell
-    sleep 1
-    dieinsubshell
-    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
-)
+if ! [[ -v args ]]; then
+# when no arguments given, examplifies a crashing file
+echo Crashing 1>&2
+die
+echo "Should stop at first hick-up, you shouldn't see this" 1>&2
+fi
