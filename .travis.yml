@@ -7,5 +7,4 @@ cache:
     - "node_modules"
 script:
   - npm install --save-dev bats
-  - npm link
-  - bats ./gabr.bats
+  - npm test
