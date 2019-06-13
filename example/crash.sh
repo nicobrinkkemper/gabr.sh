@@ -10,7 +10,7 @@ function die () { # -- e.g. gabr example crash die; echo $?
     return 1
 }
 
-function notfound () { # -- e.g. gabr example crash die; echo $?
+function notfound () { # -- e.g. gabr example crash notfound; echo $?
     thiscommandisnotfound
 }
 
