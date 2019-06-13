@@ -103,13 +103,13 @@ return 1
 @test "gabr crashes shell when env is prod" {
     source $(gabrLocation)
     GABR_ENV=dev
-    result="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))"
+    result="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
     GABR_ENV=debug
-    result+="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))"
+    result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
     GABR_ENV=prod
-    result+="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))" # can not print exit code due to crash of shell
+    result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))" # can not print due to crash of shell
     echo failed-result="\"${result}\"" 1>&2
-    [ $result = "1-dev_1-debug_" ]
+    [ $result = "dev_debug_" ]
 }
 
 @test "gabr does not walk over a error" {
