@@ -19,6 +19,7 @@ services:
   - docker
 
 script:
+- bash ./modules/bats-core/install.sh .
 - |
   if [[ "$TRAVIS_OS_NAME" == 'linux' && -n "$BASHVER" ]]; then
     docker build --build-arg bashver=${BASHVER} --tag bats/bats:bash-${BASHVER} .
