@@ -1,16 +1,8 @@
 language: bash
 os:
-- linux
+  - linux
 
 node_js: "stable"
-env:
-  # - BASHVER=
-  # - BASHVER=3.2
-  # - BASHVER=4.0
-  # - BASHVER=4.1
-  # - BASHVER=4.2
-  # - BASHVER=4.3
-  - BASHVER=4.4
 
 matrix:
   include:
@@ -20,9 +12,9 @@ services:
   - docker
 
 script:
-- npm install --save-dev bats
+- npm install --only=dev
 - |
-  if [[ "$TRAVIS_OS_NAME" == 'linux' && -n "$BASHVER" ]]; then
+  if [ "$TRAVIS_OS_NAME" = 'linux' ] && [ -n "$BASHVER" ]; then
     docker build --build-arg bashver=${BASHVER} --tag bats/bats:bash-${BASHVER} .
     docker run -it bash:${BASHVER} --version
     time docker run -it bats/bats:bash-${BASHVER} --tap /opt/bats/test
