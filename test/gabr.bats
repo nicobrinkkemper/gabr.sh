@@ -2,9 +2,6 @@ function return1(){
     exitcode=1
     return 1
 }
-@test "Gabr fails on overly recursive calls (max 50)" {
-    ! [ "$(gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr filename)" ]
-}
 
 function debug(){
     echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
