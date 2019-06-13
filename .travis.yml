@@ -1,8 +1,4 @@
 language: bash
-matrix:
-  include:
-    - language: node_js
-
 os:
 - linux
 
@@ -17,6 +13,7 @@ env:
 
 matrix:
   include:
+    - language: node_js
     - os: osx
 
 services:
