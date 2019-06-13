@@ -33,7 +33,7 @@ function gabr() {  # A function to run other functions
     if ! [[ -v args ]]; then
         local -a args=()
     elif [[ $# -eq 0 ]]; then
-        set -- ${args[@]}
+        set -- ${args[@]:-}
     fi
     if ! [[ -v debug ]]; then
         local -a debug=()
@@ -153,7 +153,7 @@ $default(){
                             if [[ -v debug ]]; then
                                 printf $wrapInfo "${fn} is derived" >&2
                             fi
-                            set -- ${filename} ${args[@]}
+                            set -- ${filename} ${args[@]:-}
                         fi
                     fi
                 fi
