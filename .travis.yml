@@ -3,6 +3,12 @@ os:
   - linux
 
 env:
+  - BASHVER=
+  - BASHVER=3.2
+  - BASHVER=4.0
+  - BASHVER=4.1
+  - BASHVER=4.2
+  - BASHVER=4.3
   - BASHVER=4.4
 
 node_js: "stable"
@@ -10,6 +16,7 @@ node_js: "stable"
 matrix:
   include:
     - os: osx
+      node_js: "stable"
 
 services:
   - docker
