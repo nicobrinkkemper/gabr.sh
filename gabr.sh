@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# GABR_ENV/env
-# Alters the output and behavior of the script.
-# Valid string:
-#   - default (dev)   - 'set -Euo pipefail' at subshell level
-#   - debug           - same as default, but print detailed internal workings of gabr
-#   - prod            - 'set -euo pipefail' at global level
-
-# GABR_ROOT/root
-# Alters the directory which to look for functions as last resort
-# Valid string:
-#    - Valid path to directory. e.g. ./scripts, $PWD, ~/Code/project
-
-# GABR_DEFAULT/default
-# Alters the function that is generated and called as last resort
-# By default, a generated function called 'usage' will print a generated variable called 'usage'
-# Valid string:
-#    - Any function name, e.g. help, usage, info
-
-function gabr(){  # Runs any function in any file through a short api based on the names of local files, directories and functions -- gabr <directory | file | function> <arguments>
+# @file gabr.sh
+# @brief This file contains the gabr function and acts as the function when called as file (`bash ./gabr.sh`)
+# @description  The gabr function turns arguments in to a function call.
+# When a function is named after a file, only one argument is needed. This
+# is also true for a directory. Gabr chooses the path of least resistance
+# towards a function call.
+#
+# @example
+#   $ gabr example human smile
+#   This is human
+#   :)
+#
+# @arg $1 string A file, directory or function
+# @arg $@ any Will be shifted through until a valid function is found
+#
+# @exitcode 0  If successfull
+# @exitcode >0 On failure
+#
+function gabr() {  # A function to run other functions 
     if ! [[ -v funcname ]]; then
         local -a funcname=(${FUNCNAME[@]})
     fi
@@ -103,8 +103,7 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
     if [[ $env = dev ]] || [[ $env = debug ]]; then
         set -Euo pipefail
     fi
-    trap 'exitcode=$?; if [[ -v error ]]; then error+=("${prevFn} ${fn} returned exitcode $exitcode"); fi; cd $pwd; return $exitcode' ERR SIGINT
-    trap 'if [[ -v error ]] && [[ ${#error[@]} -ne 0 ]]; then printf "$wrapErr" "${error[*]}" >&2; fi; exitcode=${exitcode:-${?}}' RETURN
+    trap 'exitcode=$?; cd $pwd; return $exitcode' ERR SIGINT
     if ! [[ $(type -t $default) = function ]]; then
         eval "\
 $default(){
@@ -196,9 +195,9 @@ $default(){
         if [[ -v debug ]]; then
             for val in ${debug[@]}
             do
-                local result=$(declare -p $val 2>/dev/null)
-                if [[ -v $val ]] || ! [[ ${result} = ${result##*\=} ]] && ! [[ ${result##*\=} = '()' ]]; then
-                    echo "# $(echo $result | cut -d' ' -f 3-)" >&2
+                local valArr=${val}[@]
+                if [[ -v $val ]] || [[ -n ${!valArr+set} ]]; then
+                    echo "# $(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" >&2
                 fi
             done
         fi

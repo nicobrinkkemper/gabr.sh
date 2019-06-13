@@ -5,6 +5,7 @@ if [[ $# -eq 0 ]]; then
     # sidenote: running a file is legit the same thing as running a function
     #           gabr won't fall-back to usage if it was able to source a file.
 fi
+
 declare usageFilename=${filename:-'example'} # This allows changing the filename
 
 function _usageFunctions(){ # Prints all functions added to scope by gabr
