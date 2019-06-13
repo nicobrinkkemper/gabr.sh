@@ -1,0 +1,6 @@
+[submodule "vendor"]
+	path = vendor
+	url = git@github.com:reconquest/shdoc.git
+[submodule "modules/shdoc"]
+	path = modules/shdoc
+	url = git@github.com:reconquest/shdoc.git
