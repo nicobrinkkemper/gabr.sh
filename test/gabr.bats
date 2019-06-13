@@ -1,9 +1,3 @@
-
-function return127(){
-    exitcode=127
-    return 127
-}
-
 function return1(){
     exitcode=1
     return 1
@@ -46,24 +40,24 @@ function boo(){
     trap 'rm -rf ./boo' RETURN
 }
 
-@test "Gabr global errors when a file returns 127" {
+@test "Gabr global errors when a file exits" {
     source ./gabr.sh
     mkdir -p spooky
     echo "\
-spooky
+(exit 1)
 " > spooky/spooky.sh
     GABR_ENV=dev
     run gabr spooky
     debug
-    [ "$status" -gt 0 ]
+    [ "$status" -eq 1 ]
     GABR_ENV=debug
     run gabr spooky
     debug
-    [ "$status" -gt 0 ]
+    [ "$status" -eq 1 ]
     GABR_ENV=prod
     run gabr spooky
     debug
-    [ "$status" -gt 0 ]
+    [ "$status" -eq 1 ]
     trap 'rm -rf ./spooky' RETURN
 }
 
@@ -97,22 +91,6 @@ spooky
     run gabr return1
     debug
     [ "$status" -eq 1 ]
-}
-
-@test "gabr errors when a function returns 127" {
-    source ./gabr.sh
-    GABR_ENV=dev
-    run gabr return127
-    debug
-    [ "$status" -gt 0 ] # not all automated testing environments think the same about 127
-    GABR_ENV=debug
-    run gabr return127
-    debug
-    [ "$status" -gt 0 ]
-    GABR_ENV=prod
-    run gabr return127
-    debug
-    [ "$status" -gt 0 ]
 }
 
 @test "gabr crashes shell when env is prod" {
