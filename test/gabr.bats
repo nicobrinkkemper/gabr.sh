@@ -10,9 +10,8 @@ function debug(){
 function gabrLocation(){
     if ! [ -f "./gabr.sh" ]; then
         echo PWD=$PWD >&2
-        echo "Looking for gabr.sh" >&2
-        local gabrLocation="$(find . -type f -name gabr.sh)"
-        cd ${gabrLocation%\/*}
+        echo "Can't find gabr.sh" >&2
+        return 1
     fi
     echo "./gabr.sh"
 }

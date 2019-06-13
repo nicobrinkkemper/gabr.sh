@@ -9,6 +9,6 @@ RUN apk add --no-cache parallel && \
 
 RUN ln -s /opt/bats/bin/bats /usr/sbin/bats
 COPY . /opt/bats/
-COPY ./gabr.sh /opt/bats/test
+COPY ./gabr.sh /
 
 ENTRYPOINT ["bash", "/usr/sbin/bats"]
