@@ -2,11 +2,15 @@ function return1(){
     exitcode=1
     return 1
 }
+@test "Gabr fails on overly recursive calls (max 50)" {
+    ! [ "$(gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr filename)" ]
+}
 
 function debug(){
     echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
     echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
 }
+
 function gabrLocation(){
     if ! [ -f "./gabr.sh" ]; then
         echo PWD=$PWD >&2
@@ -243,8 +247,4 @@ function bonito(){
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -rf .jimtest' RETURN
     [ "$result"  = "de wever" ]
-}
-
-@test "Gabr fails on overly recursive calls (max 50)" {
-    ! [ "$(gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr filename)" ]
 }

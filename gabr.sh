@@ -17,7 +17,12 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
+if ((BASH_VERSINFO >= 4))
+then
+  source "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead
+else
 function gabr() {  # A function to run other functions 
+    FUNCNEST=50
     if [ -z "${funcname:-}" ]; then
         local -a funcname=(${FUNCNAME[@]})
     fi
@@ -199,7 +204,7 @@ ${default:-usage}(){
 # @close subshell
 )
 }
-
+fi
 if [ "$0" = "$BASH_SOURCE" ]; then
     declare IFS=$'\n\t'
     gabr ${*}
