@@ -1,7 +1,7 @@
 language: bash
 os:
-  - linux
-
+  - linux"
+  
 env:
   - BASHVER=
   - BASHVER=3.2
@@ -11,12 +11,12 @@ env:
   - BASHVER=4.3
   - BASHVER=4.4
 
-node_js: "stable"
+
 
 matrix:
   include:
     - os: osx
-      node_js: "stable"
+    - node_js: "stable"
 
 services:
   - docker
