@@ -164,7 +164,7 @@ spooky
     ))
     local str=$(IFS=$' '; echo ${result[*]})
     echo failed-result=$str 1>&2
-    [ $str = "- - gabr" ]
+    [ "$str" = "- - gabr" ]
 
 }
 
@@ -180,7 +180,7 @@ function saybye(){
     local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./sayhi.sh' RETURN
-    [ $result  = 'hi hi hi bye' ]
+    [ "$result"  = 'hi hi hi bye' ]
 }
 
 @test "Gabr does not alter spaces in arguments" {
@@ -192,7 +192,7 @@ function whatdidisay(){
     local result="$(gabr whatdidisay ' jim ' " has long " " cheeks ")"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./whatdidisay.sh' RETURN
-    [ $result  = ' jim   has long   cheeks ' ]
+    [ "$result"  = ' jim   has long   cheeks ' ]
 }
 
 @test "Gabr sees tabs as separator" {

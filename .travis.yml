@@ -10,6 +10,7 @@ env:
   - BASHVER=4.2
   - BASHVER=4.3
   - BASHVER=4.4
+
 node_js: "stable"
 
 matrix:
