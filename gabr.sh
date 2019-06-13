@@ -79,7 +79,12 @@ function gabr(){  # Runs any function in any file through a short api based on t
         local root=$PWD
     fi
     if ! [[ -v $default ]]; then
-        local $default="Usage: ${FUNCNAME} [directory | filename | function] [arguments] - e.g. ${FUNCNAME} usage"
+        local $default="\
+${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
+    --file       A full path to a file
+    --derive     A filename without extension
+    1..N         Performs various checks to derive flags and optimize the API.
+                 Flags are optional and not needed in most cases."
     fi
     if ! [[ -v stack ]]; then
         local stack=$(declare -F)
