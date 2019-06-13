@@ -1,11 +1,3 @@
-
-@test "Gabr returns non error code" {
-    source ./gabr.sh
-    run gabr
-    echo failed-status="\"${status}\"" 1>&2
-    [[ $status -eq 0 ]]
-}
-
 function return127(){
     exitcode=127
     return 127
@@ -14,6 +6,13 @@ function return127(){
 function return1(){
     exitcode=1
     return 1
+}
+
+@test "Gabr returns non error code" {
+    source ./gabr.sh
+    run gabr
+    echo failed-status="\"${status}\"" 1>&2
+    [[ $status -eq 0 ]]
 }
 
 @test "Gabr errors the same return code" {
