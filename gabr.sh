@@ -99,7 +99,7 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
 ( # @enter subshell
     local IFS=$'\n\t'
     if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
-        set -Euo pipefail
+        set -eEuo pipefail
     fi
     trap 'exitcode=$?; cd $pwd; return $exitcode' ERR SIGINT
     if ! [ "$(type -t $default)" = 'function' ]; then
