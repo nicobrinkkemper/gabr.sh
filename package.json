@@ -4,11 +4,12 @@
   "description": "Make Bash functions accessible with gabr.sh",
   "main": "gabr.sh",
   "scripts": {
-    "test": "./node_modules/.bin/bats gabr.bats",
+    "test": "bats --tap test",
     "release": "release-it"
   },
   "bin": {
-    "gabr": "./gabr.sh"
+    "gabr": "./gabr.sh",
+    "bats": "./node_modules/.bin/bats"
   },
   "repository": {
     "type": "git",
