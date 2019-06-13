@@ -1,4 +1,6 @@
 # Gabr.sh
+[![npm package](https://img.shields.io/npm/v/gabr.sh.svg)](https://www.npmjs.com/package/gabr.sh)
+[![Continuous integration status for Linux and macOS](https://travis-ci.org/nicobrinkkemper/gabr.sh.svg?branch=master&label=travis%20build)](https://travis-ci.org/bats-core/bats-core)
 
 ## Installation
 ### Install as node_module
@@ -35,7 +37,7 @@ gabr helloworld
 but gabr doesn't care. If it's a function, it will call it. This
 just proofs that. Now if you put it in a file called `helloworld.sh`,
 the command won't change. And you can go further and put it in a 
-directory called `helloworld`. To see this in code, see [HELLOWORLD.md](/HELLOWORLD.md) 
+directory called `helloworld`. To see this in code, see [HELLOWORLD.md](/examples/HELLOWORLD.md) 
 
 ## Variables
 ### env (default:dev)

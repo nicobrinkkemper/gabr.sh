@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # @file gabr.sh
-# @brief This file contains the gabr function and acts as the function when called as file (`bash ./gabr.sh`)
-# @description  The gabr function turns arguments in to a function call.
-# When a function is named after a file, only one argument is needed. This
-# is also true for a directory. Gabr chooses the path of least resistance
-# towards a function call.
+# @brief This file contains one function and acts as that function when called as a file.
+# @description  The gabr function will be available after sourcing this file.
+# Tt sources a more modern version of the function if BASH_VERSION is 4.3+
+# Fear not, these files behave almost identical.
 #
 # @example
 #   $ gabr example human smile
@@ -17,7 +16,7 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
+if [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
 then
   source "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead (which has minor benefits like file checking)
 else

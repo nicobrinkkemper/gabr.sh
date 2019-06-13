@@ -7,7 +7,7 @@
 * [upstream()](#upstream)
 * [deleteStale()](#deleteStale)
 * [deleteBranch()](#deleteBranch)
-* [deleteRemoteBranch()](#deleteRemoteBranch)
+* [deleteTag()](#deleteTag)
 
 
 ## currentBranch()
@@ -16,7 +16,7 @@ Gets the current branch
 ### Example
 
 ```bash
-$ gabr git currentBranch
+$ gabr example git currentBranch
 master
 ```
 
@@ -26,7 +26,7 @@ Deletes a local branch
 ### Example
 
 ```bash
-$ gabr git deleteBranch
+$ gabr example git deleteBranch
 ```
 
 ## upstream()
@@ -35,7 +35,7 @@ Sets current branch to upstream
 ### Example
 
 ```bash
-$ gabr git upstream
+$ gabr example git upstream
 ```
 
 ### Arguments
@@ -51,7 +51,7 @@ To maybe see this message pop-up, run `git remote show origin`
 ### Example
 
 ```bash
-$ gabr git deleteStale
+$ gabr example git deleteStale
 ```
 
 ## deleteBranch()
@@ -60,7 +60,7 @@ Checkout other branch (e.g. master) then delete previous active branch
 ### Example
 
 ```bash
-$ gabr git deleteLocalBranch feature-branch
+$ gabr example git deleteLocalBranch feature-branch
 ```
 
 ### Arguments
@@ -69,17 +69,16 @@ $ gabr git deleteLocalBranch feature-branch
 * string [ $2 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
 * string [ $3 | $remote ]  to-delete-remote (default:current) -- e.g. origin
 
-## deleteRemoteBranch()
+## deleteTag()
 
 Delete a remote branch
 ### Example
 
 ```bash
-    gabr git deleteRemoteBranch some-feature
+    gabr example git deleteTag some-feature
 ```
 
 ### Arguments
 
-* **$1** (remote-branch):
-* $2|$remote a variable to control remote branch (default:current)
+* **$1** (version):
 

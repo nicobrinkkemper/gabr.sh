@@ -33,6 +33,7 @@ function deleteBranch() {
 
 # @description Sets current branch to upstream
 # @example
+#   $ git checkout -b new-feature
 #   $ gabr example git upstream
 # @arg $branch A variable to set origin to (default:current)
 function upstream() {

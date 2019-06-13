@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # @file gabr.linux.sh
-# @brief This file contains the original gabr function before it got butchered in order to support order bash versions.
+# @brief This file contains the original gabr function before it got butchered in order to support older Bash versions.
 #
-# @description The main benefit is cleaner (and possibly more performant) code. But the draw-back is Bash 4 only.
-# This file might be revived later, or deleted. For now it will pass al the tests our other gabr function does, so
-# it's sourced if Bash allows it when sourcing the other file. Feel free to source this one instead.
+# @description The main benefit is cleaner code. But the draw-back is Bash 4.3+ only. 4.3+ supports
+# associative arrays (-A) and -v flags. The -A flag is used to check if files are not being resourced, which
+# is a minor extra feature. 
 #
 # @example
+#   $ debug=(files)
 #   $ gabr example human smile
-#   This is human
-#   :)
 #
 # @arg $1 string A file, directory or function
 # @arg $@ any Will be shifted through until a valid function is found
