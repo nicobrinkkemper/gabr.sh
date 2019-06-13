@@ -34,15 +34,15 @@ function boo(){
     GABR_ENV=dev
     run gabr boo
     debug
-    [ "$status" -eq 123 ]
+    [ "$status" -gt 0 ]
     GABR_ENV=debug
     run gabr boo
     debug
-    [ "$status" -eq 123 ]
+    [ "$status" -gt 0 ]
     GABR_ENV=prod
     run gabr boo
     debug
-    [ "$status" -eq 123 ]
+    [ "$status" -gt 0 ]
     trap 'rm -rf ./boo' RETURN
 }
 
