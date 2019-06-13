@@ -137,14 +137,14 @@ ${default:-usage}(){
                     return 1;
                 else
                     prevFn=$fn
-                    fn=$1; shift; args=(${@});
+                    fn=$1; shift; args=(${@:-});
                     pathJuggle=${fn##*/}
                     filename=${pathJuggle%%.*}
                     source $fn
                     if [ "$(type -t ${filename})" = 'function' ]; then
-                        if [ ${prevFn^^} = '--DERIVE' ] || [ -z "${args:-}" ] || [ ${args::1} = '-' ]; then
+                        if [ "${prevFn}" = '--derive' ] || [ -z "${args:-}" ] || [ ${args::1} = '-' ]; then
                             if [ -n "${debug:-}" ]; then
-                                printf $wrapInfo "${fn} is derived" >&2
+                                printf "$wrapInfo" "${fn} is derived" >&2
                             fi
                             set -- ${filename} ${args[@]:-}
                         fi
