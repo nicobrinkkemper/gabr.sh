@@ -18,51 +18,51 @@
 # @exitcode >0 On failure
 #
 function gabr() {  # A function to run other functions 
-    if [ -z "${funcname+set}" ]; then
+    if [ -z "${funcname:-}" ]; then
         local -a funcname=(${FUNCNAME[@]})
     fi
-    if [ -z "${filename+set}" ]; then
+    if [ -z "${filename:-}" ]; then
         local filename
     fi
-    if [ -z "${pathJuggle+set}" ]; then
+    if [ -z "${pathJuggle:-}" ]; then
         local pathJuggle
     fi
-    if [ -z "${exitcode+set}" ]; then
+    if [ -z "${exitcode:-}" ]; then
         local exitcode
     fi
-    if [ -z "${args+set}" ]; then
+    if [ -z "${args:-}" ]; then
         local -a args=()
     elif [ $# -eq 0 ]; then
         set -- ${args[@]:-}
     fi
-    if [ -z "${debug+set}" ]; then
+    if [ -z "${debug:-}" ]; then
         local -a debug=()
     fi
-    if [ -z "${fn+set}" ]; then
+    if [ -z "${fn:-}" ]; then
         local fn
     fi
-    if [ -z "${dir+set}" ]; then
+    if [ -z "${dir:-}" ]; then
         local dir=.
     fi
-    if [ -z "${primaryFn+set}" ]; then
+    if [ -z "${primaryFn:-}" ]; then
         local primaryFn=${1:-}
     fi
-    if [ -z "${env+set}" ]; then
+    if [ -z "${env:-}" ]; then
         local env=dev
     fi
-    if [ -z "${pwd+set}" ]; then
+    if [ -z "${pwd:-}" ]; then
         local pwd="${PWD}"
     fi
-    if [ "$env" = 'debug' ] && [ -z "${debug+set}" ]; then
+    if [ "$env" = 'debug' ] && [ -z "${debug:-}" ]; then
         debug=(fn args dir filename)
     fi
-    if [ -z "${default+set}" ]; then
+    if [ -z "${default:-}" ]; then
         local default=usage 
     fi
-    if [ -z "${root+set}" ]; then
+    if [ -z "${root:-}" ]; then
         local root=$PWD
     fi
-    if [ -z "${usage+set}" ]; then
+    if [ -z "${usage:-}" ]; then
         local usage="\
 ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
     --file       A full path to a file
@@ -70,26 +70,26 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
     1..N         Performs various checks to derive flags and optimize the API.
                  Flags are optional and not needed in most cases."
     fi
-    if [ -z "${stack+set}" ]; then
+    if [ -z "${stack:-}" ]; then
         local stack=$(declare -F)
     fi
-    if [ -z "${wrapInfo+set}" ]; then
+    if [ -z "${wrapInfo:-}" ]; then
         local wrapInfo="# "%s'\n'
     fi
-    if [ -z "${wrapErr+set}" ]; then
+    if [ -z "${wrapErr:-}" ]; then
         local wrapErr=$'\033[0;91m'"Warning: "%s$'\033[0m\n' # printfn LightRed with newline -- e.g. printfn ${wrapErr} "something went wrong"
     fi
-    if [ -z "${error+set}" ]; then
+    if [ -z "${error:-}" ]; then
         local -a error=()
     fi
     # Set from globals
-    if ! [ -z "${GABR_ROOT+set}" ]; then
+    if ! [ -z "${GABR_ROOT:-}" ]; then
         root=${GABR_ROOT:-${PWD}} # Optionally set a fixed root through a global
     fi
-    if ! [ -z "${GABR_ENV+set}" ]; then
+    if ! [ -z "${GABR_ENV:-}" ]; then
         env=${GABR_ENV:-dev}
     fi
-    if ! [ -z "${GABR_DEFAULT+set}" ]; then
+    if ! [ -z "${GABR_DEFAULT:-}" ]; then
         default=${GABR_DEFAULT:-usage} # Optionally set a fixed namespace for 'usage' functionality
     fi
     # Set prod mode
@@ -115,11 +115,11 @@ ${default:-usage}(){
     local prevFn=''
     while [ "$#" -ne 0 ];
     do
-        if [ -z "${fn+set}" ]; then
+        if [ -n "${fn:-}" ]; then
             prevFn=$fn
         fi
         fn=${1:-$default}; shift; args=(${@});
-        if [ -z "${debug+set}" ]; then
+        if [ -n "${debug:-}" ]; then
             echo "# -----------" >&2
         fi
         if [ "${fn::2}" = '-' ]; then
@@ -127,7 +127,7 @@ ${default:-usage}(){
         elif [ "${fn::2}" = '--' ]; then
             if [ "${fn^^}" = '--FILE' ] || [ "${fn^^}" = '--DERIVE' ]; then
                 
-                if [ -z "${args+set}"  ]; then
+                if [ -z "${args:-}"  ]; then
                     error+=("Can not find a file without arguments")
                     printf "$wrapErr" "${error[*]}" 1>&2
                     return 1;
@@ -142,8 +142,8 @@ ${default:-usage}(){
                     filename=${pathJuggle%%.*}
                     source $fn
                     if [ "$(type -t ${filename})" = 'function' ]; then
-                        if [ ${prevFn^^} = '--DERIVE' ] || [ -z "${args+set}" ] || [ ${args::1} = '-' ]; then
-                            if [ -z "${debug+set}" ]; then
+                        if [ ${prevFn^^} = '--DERIVE' ] || [ -z "${args:-}" ] || [ ${args::1} = '-' ]; then
+                            if [ -n "${debug:-}" ]; then
                                 printf $wrapInfo "${fn} is derived" >&2
                             fi
                             set -- ${filename} ${args[@]:-}
@@ -152,7 +152,7 @@ ${default:-usage}(){
                 fi
             fi
         elif [ "$(type -t ${fn:-})" = 'function' ]; then
-            if [ -z "${debug+set}" ]; then
+            if [ -n "${debug:-}" ]; then
                 printf "$wrapInfo" "Calling ${fn}" >&2
             fi
             cd $dir
@@ -177,7 +177,7 @@ ${default:-usage}(){
         elif ! [ "$PWD" = "$root" ]; then # allow the same as above, but in root directory
             cd $root
             set -- $fn ${args[@]:-}   
-            if [ -z "${debug+set}" ]; then
+            if [ -n "${debug:-}" ]; then
                 printf $wrapInfo "Nothing found, switched to root as last resort" >&2
             fi         
         else
@@ -185,11 +185,11 @@ ${default:-usage}(){
             printf "$wrapErr" "${error[*]}" 1>&2
             return 1
         fi
-        if [ -z "${debug+set}" ]; then
+        if [ -n "${debug:-}" ]; then
             for val in ${debug[@]}
             do
                 local valArr=${val:-}[@]
-                if [ -n "$valArr" ] && [ -n "${!valArr+set}" ]; then
+                if [ -n "${!valArr:-}" ]; then
                     echo "# $(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" >&2
                 fi
             done
