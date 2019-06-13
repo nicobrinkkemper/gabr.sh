@@ -106,7 +106,7 @@ ${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to ca
     if [[ $env = dev ]] || [[ $env = debug ]]; then
         set -Euo pipefail
     fi
-    trap 'exitcode=$?; cd $pwd; return $exitcode' ERR SIGINT
+    trap 'exitcode=$?; cd $pwd; (exit $exitcode); return $exitcode' ERR SIGINT
     if ! [[ "$(type -t $default)" = function ]]; then
         eval "\
 $default(){
