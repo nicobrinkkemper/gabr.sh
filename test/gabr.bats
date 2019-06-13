@@ -7,7 +7,7 @@ function debug(){
     echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
     echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
 }
-
+cd $(git rev-parse --show-toplevel) # run from git root
 
 @test "Gabr returns non error code" {
     source ./gabr.sh
