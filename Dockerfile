@@ -7,7 +7,7 @@ FROM bash:${bashver}
 RUN apk add --no-cache parallel && \
     mkdir -p ~/.parallel && touch ~/.parallel/will-cite
 
-RUN ln -s /opt/bats/bin/bats /usr/sbin/bats
+RUN ln -s /opt/gabr/modules/bats-core/bin/bats /usr/sbin/bats
 COPY . /opt/gabr/
 COPY ./gabr.sh /
 
