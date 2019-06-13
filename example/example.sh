@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 if [[ $# -eq 0 ]]; then
-    set -- usage
+    set -- usage # This is how usage is forced when no arguments given
+    # sidenote: running a file is legit the same thing as running a function
+    #           gabr won't fall-back to usage if it was able to source a file.
 fi
-declare usageFilename=${filename:-'example'}
+declare usageFilename=${filename:-'example'} # This allows changing the filename
 
-function _usageFunctions(){
+function _usageFunctions(){ # Prints all functions added to scope by gabr
     local usageScope=$(
         echo "${stack}" "${stack}" "$(declare -F)" |
             tr ' ' '\n' |
