@@ -164,26 +164,26 @@ $default(){
             fi
             cd $dir
             dir=.
-            $fn ${args[@]};
+            $fn ${args[@]:-};
             cd $pwd
             return $?
         elif [[ -f $fn ]]; then # allow file
-            set -- --file $fn ${args[@]}                             
+            set -- --file $fn ${args[@]:-}                             
         elif [[ -f ${dir}/$fn ]]; then # allow files in dir
-            set -- --file ${dir}/$fn ${args[@]}
+            set -- --file ${dir}/$fn ${args[@]:-}
         elif [[ -f ${dir}/$fn.sh ]]; then # allow files omitting .sh
-            set -- --derive ${dir}/$fn.sh ${args[@]}
+            set -- --derive ${dir}/$fn.sh ${args[@]:-}
         elif [[ -f  ${dir}/${fn}/$fn.sh ]]; then # allow dir same as file
-            set -- --derive ${dir}/${fn}/$fn.sh ${args[@]}
+            set -- --derive ${dir}/${fn}/$fn.sh ${args[@]:-}
             dir+=/$fn 
         elif [[ -d $fn ]]; then # allow directory
             dir+=/$fn
         elif ! [[ $dir = . ]]; then # allow the same as above, but in current directory
             dir=.
-            set -- $fn ${args[@]}
+            set -- $fn ${args[@]:-}
         elif ! [[ $PWD = $root ]]; then # allow the same as above, but in root directory
             cd $root
-            set -- $fn ${args[@]}   
+            set -- $fn ${args[@]:-}   
             if [[ -v debug ]]; then
                 printf $wrapInfo "Nothing found, switched to root as last resort" >&2
             fi         
