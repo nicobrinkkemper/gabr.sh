@@ -8,10 +8,16 @@ function return1(){
     return 1
 }
 
+function debug(){
+    echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
+    echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
+}
+
+
 @test "Gabr returns non error code" {
     source ./gabr.sh
     run gabr
-    echo failed-status="\"${status}\"" 1>&2
+    debug
     [[ $status -eq 0 ]]
 }
 
@@ -26,15 +32,15 @@ function boo(){
 " > boo/boo.sh
     GABR_ENV=dev
     run gabr boo
-    echo failed-status-dev="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 123 ]]
     GABR_ENV=debug
     run gabr boo
-    echo failed-status-debug="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 123 ]]
     GABR_ENV=prod
     run gabr boo
-    echo failed-status-prod="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 123 ]]
     trap 'rm -rf ./boo' RETURN
 }
@@ -47,15 +53,15 @@ spooky
 " > spooky/spooky.sh
     GABR_ENV=dev
     run gabr spooky
-    echo failed-status-dev="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 127 ]]
     GABR_ENV=debug
     run gabr spooky
-    echo failed-status-debug="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 127 ]]
     GABR_ENV=prod
     run gabr spooky
-    echo failed-status-prod="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 127 ]]
     trap 'rm -rf ./spooky' RETURN
 }
@@ -64,15 +70,15 @@ spooky
     source ./gabr.sh
     GABR_ENV=dev
     run gabr undefined
-    echo failed-status-dev="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 1 ]]
     GABR_ENV=debug
     run gabr undefined
-    echo failed-status-debug="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 1 ]]
     GABR_ENV=prod
     run gabr undefined
-    echo failed-status-prod="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 1 ]]
 }
 
@@ -80,12 +86,15 @@ spooky
     source ./gabr.sh
     GABR_ENV=dev
     run gabr return1
+    debug
     [[ "$status" -eq 1 ]]
     GABR_ENV=debug
     run gabr return1
+    debug
     [[ "$status" -eq 1 ]]
     GABR_ENV=prod
     run gabr return1
+    debug
     [[ "$status" -eq 1 ]]
 }
 
@@ -93,15 +102,15 @@ spooky
     source ./gabr.sh
     GABR_ENV=dev
     run gabr return127
-    echo failed-status-dev="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 127 ]]
     GABR_ENV=debug
     run gabr return127
-    echo failed-status-debug="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 127 ]]
     GABR_ENV=prod
     run gabr return127
-    echo failed-status-prod="\"${status}\"" 1>&2
+    debug
     [[ "$status" -eq 127 ]]
 }
 
@@ -245,7 +254,6 @@ function bonito(){
 }" > .jimtest/bonito.sh
     source ./gabr.sh
     local result="$(gabr $(gabr .jimtest jim))"
-    echo result="\"${result}\"" 1>&2
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -rf .jimtest' RETURN
     [[ "$result"  = "de wever" ]]
