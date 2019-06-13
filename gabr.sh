@@ -118,14 +118,14 @@ ${default:-usage}(){
         if [ -n "${fn:-}" ]; then
             prevFn=$fn
         fi
-        fn=${1:-$default}; shift; args=(${@});
+        fn=${1:-$default}; shift; args=(${@:-});
         if [ -n "${debug:-}" ]; then
             echo "# -----------" >&2
         fi
         if [ "${fn::2}" = '-' ]; then
             break
         elif [ "${fn::2}" = '--' ]; then
-            if [ "${fn^^}" = '--FILE' ] || [ "${fn^^}" = '--DERIVE' ]; then
+            if [ "${fn}" = '--file' ] || [ "${fn}" = '--derive' ]; then
                 
                 if [ -z "${args:-}"  ]; then
                     error+=("Can not find a file without arguments")
