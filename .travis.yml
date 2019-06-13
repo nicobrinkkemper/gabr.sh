@@ -2,12 +2,6 @@ language: bash
 os:
   - linux"
 
-before_install:
-  - wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
-  - export NVM_DIR="${XDG_CONFIG_HOME/:-$HOME/.}nvm"
-  - '[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"'
-  - nvm install stable
-
 env:
   - BASHVER=
   - BASHVER=3.2
@@ -25,14 +19,13 @@ services:
   - docker
 
 script:
-- npm install --only=dev
 - |
   if [ "$TRAVIS_OS_NAME" = 'linux' ] && [ -n "$BASHVER" ]; then
     docker build --build-arg bashver=${BASHVER} --tag bats/bats:bash-${BASHVER} .
     docker run -it bash:${BASHVER} --version
     time docker run -it bats/bats:bash-${BASHVER} --tap /opt/bats/test
   else
-    time ./node_modules/.bin/bats --tap test
+    time ./modules/bats-core/bin/bats --tap test
   fi
 notifications:
   email:
