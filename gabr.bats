@@ -1,3 +1,5 @@
+#!/usr/bin/env bats
+
 function return127(){
     exitcode=127
     return 127
