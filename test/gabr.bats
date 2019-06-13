@@ -44,7 +44,7 @@ function boo(){
     source ./gabr.sh
     mkdir -p spooky
     echo "\
-(exit 1)
+return 1
 " > spooky/spooky.sh
     GABR_ENV=dev
     run gabr spooky
