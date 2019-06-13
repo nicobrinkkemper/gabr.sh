@@ -45,6 +45,7 @@ GABR_ENV=dev
 env=dev
 ```
 > `set -Euo pipefail` at subshell level *(default)*
+>
 > Will exit a subshell on errors (non-zero return)
 ```
 GABR_ENV=debug
@@ -58,7 +59,7 @@ GABR_ENV=prod
 env=prod
 ```
 > `set -euo pipefail` at shell level
->
+> 
 > Will exit both shell and subshell on errors
 ```shell
 GABR_ENV=none
