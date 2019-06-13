@@ -1,83 +1,119 @@
-# Installation
-```
-wget https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/gabr.sh
-```
-Or
-```
-npm install gabr.sh
-npm link
-```
+# Gabr.sh
 
-
-# What is gabr.sh
-Gabr.sh allows you to write functional code. If you have a command that you need to
-type in a lot, it's a good candidate to put in to a Bash function. Gabr makes it easy to
-run that function, without adding anything to the file. Not having the procedural code to run the
-function inside your files opens up interesting and clean code patterns with Bash.
-
-## Hello world
-
+## Installation
+### Install as node_module
 ```shell
-$ mkdir helloworld
-$ echo "\
-function helloworld() {
-  echo hello world
-}" > ./helloworld/helloworld.sh
+$ npm install --save-dev gabr.sh
+$ npm link
 ```
+### Install as file
 ```shell
+$ wget https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/gabr.sh
 $ source ./gabr.sh
 ```
-```shell
-$ gabr helloworld
-hello world
+## What is gabr.sh
+Gabr is a Bash function designed to call other Bash functions.
+Gabr takes arguments and will try to turn that in to a function call.
+
+## Usage
 ```
-> Fore more examples, see ./example
-
-## Why use Gabr.sh?
-
-### Developer friendly
-Use gabr if you like writing the least amount of Bash code. If you have a lot of one-off
-tasks that you'd like to remember, put it in a function and let gabr.sh call it.
-
-### Minimal API to reach your functions
-Gabr's purpose is to call functions in files. You give it arguments and it
-tries really hard to turn that argument in to a function call. If the names are the
-same, you only have to type it once.
-
-### Function nesting
-`gabr` allows to loop back to itself. `FUNCNEST` is set to 50, as to not worry about recursion problems.
-
-### "Functional" Bash Scripts
-Gabr.sh allows you to write functional code. If you have a command that you need to
-type in a lot, it's a good candidate to put in to a Bash function. Gabr makes it easy to
-run that function, without adding anything to the file. Not having the procedural code to run the
-function inside your files opens up interesting and clean code patterns with Bash.
-
-# "functional" Bash
-Bash isn't a functional language.  Calling functions has a cascading effect. If you call a function within a function, the caller will inherent the functions of the
-called function. Let's illustrate that with a example:
-
-```shell
-function human(){
-  echo "That's me" >&2
-  function sayhi(){
-    echo Hi >&2
-    function laugh(){
-      echo Haha, yes >&2
-      function laugh(){
-        echo Hahaha, you\'re killing me >&2
-      }
-    }
-  }
+gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
+    --file       A full path to a file
+    --derive     A filename without extension
+    1..N         Performs various checks to derive flags
+                 Flags are optional and not needed in most cases
+```
+## Example
+```
+function helloworld(){
+  echo hello world
 }
-human # That's me
-sayhi # Hi
-laugh # Haha, yes
-laugh # Hahaha, you're killing me
-sayhi # Hi
-laugh # Haha, yes
+source gabr.sh
+gabr helloworld
 ```
-> You can paste the code in your Bash terminal to see it in action
+> Right. But that's just helloworld with extra steps! Yes,
+but gabr doesn't care. If it's a function, it will call it. This
+just proofs that. Now if you put it in a file called `helloworld.sh`,
+the command won't change. And you can go further and put it in a 
+directory called `helloworld`. To see this in code, see [HELLOWORLD.md](/HELLOWORLD.md) 
 
-Like with CSS, the cascading effect can be problematic. It makes it very nuanced and
-hard to keep your functions pure. You can mitigate this in two ways: subshells, and `unset -f`. Gabr.sh chooses the latter, but this doesn't prevent you from writing subshell functions, like so `function fn() ( return; )`.
+## Variables
+### env (default:dev)
+```shell
+GABR_ENV=dev
+# or
+env=dev
+```
+> `set -Euo pipefail` at subshell level *(default)*
+> Will exit a subshell on errors (non-zero return)
+```
+GABR_ENV=debug
+# or
+env=debug
+```
+> Print helpful debug information
+```shell
+GABR_ENV=prod
+# or
+env=prod
+```
+> `set -euo pipefail` at shell level
+>
+> Will exit both shell and subshell on errors
+```shell
+GABR_ENV=none
+# or
+env=none
+```
+> Any other value than `dev`, `prod`, or `debug` opts-out of above rules
+
+### root (default:current PWD)
+```shell
+GABR_ROOT=$PWD # fix root to current PWD (even after cd'ing)
+# or
+root=$PWD # same as above
+# or
+GABR_ROOT=./scripts/ # fix root to local scripts folder
+```
+> This allows for a utility directory that is always available
+
+### default (default:usage)
+```shell
+GABR_DEFAULT=help # usage becomes help
+# or
+default=help # same as above
+```
+> A default function will be generated but can be overwritten or inherited.
+> 
+> The default function will echo a variable with the same name. Which
+> can also be overwritten or inherited.
+
+### dir (default:.)
+```shell
+dir=./scripts # scripts becomes the target directory for the file
+```
+> Changing `dir` during `source` can help keep your files in one directory but still couple them to a specific directory.
+
+### debug
+```shell
+debug=(fn) # gabr will enter debug mode and print information about fn
+# and
+unset debug # gabr will exit debug mode
+```
+> This allows to debug any value, even your own.
+
+#### And more
+Checkout the code, after all it's just one function. You can inherit or overwrite other variables but they will make less sense than the afore mentioned.
+
+## Flags
+
+Gabr does not require any flags. The flags will be automatically assigned
+based on user input. Only one argument is needed to call a function if files and directories are named a like.
+
+#### --file
+A full path to a file. This flag will be derived if a argument is a valid
+path to a file.
+
+#### --derive
+A name of a file without path and .sh extension. This flag will be derived if a file
+exists. The file must have a .sh extension.

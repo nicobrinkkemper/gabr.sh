@@ -1,10 +1,8 @@
-default=stickfigure # the default is 'usage'
-usage="gabr example human <laugh|smile|cry|stare|crash> -- e.g. gabr example human"
-
-function human() {
-    echo "This is me" >&2
-    gabr ${@}
-}
+#!/usr/bin/env bash
+if [[ $# -eq 0 ]]; then
+    set -- usage
+fi
+echo "This is human" >&2
 
 function laugh() { # -- e.g. gabr example human laugh
     echo ":D" >&2
@@ -23,10 +21,5 @@ function cry() { # -- e.g. gabr example human cry
 
 function stare() { # -- e.g. gabr example human stare
     echo ":|" >&2
-    return
-}
-
-function stickfigure() {
-    echo "o|-<"  >&2
     return
 }

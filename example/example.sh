@@ -1,27 +1,43 @@
-if ! [[ -v args ]]; then
-function example(){ # 
-    echo "This is a example" >&2
-}
-else
-usage() {
-    echo "Usage: gabr example <function> -- e.g. gabr example crash"
-}
+#!/usr/bin/env bash
+
+if [[ $# -eq 0 ]]; then
+    set -- usage
 fi
+declare usageFilename=${filename:-'example'}
 
-function scope() { # lists current function scope in which the function runs -- e.g. gabr example scope
-    IFS=$'\n'
-    for f in $(declare -F); do
-    echo "${f:11}"
-    done
+function _usageFunctions(){
+    local usageScope=$(
+        echo "${stack}" "${stack}" "$(declare -F)" |
+            tr ' ' '\n' |
+            sort        |
+            uniq -u     |
+            awk '! /^_/{print $0}' | # hide underscore prefixed
+            tr '\n' "|"
+    );
+    if [[ -v usageScope ]] && [[ ${#usageScope} -gt 1 ]]; then
+        echo " [${usageScope:0: -1}]"
+    fi
 }
 
-
-function passtrough() {
-    echo "Passing through" >&2
-    gabr
+function _usageFiles(){
+    local usageFiles=$(
+    find . -maxdepth 1 ! -name "${usageFilename}.sh" ! -name "${filename}.sh" -name '*.sh' |
+        cut -c3- | 
+        rev      | 
+        cut -c4- | 
+        rev      |
+        awk '!/^\./{ print $0 }' | # hide dot prefixed
+        tr '\n' "|"
+    );
+    if [[ -v usageFiles ]] && [[ ${#usageFiles} -gt 1 ]]; then
+        echo " [${usageFiles:0: -1}]"
+    fi
 }
 
-function passtroughhuman() { # exemplifies recursive gabr calls -- e.g. gabr example passtroughhuman
-    echo "Passing through" >&2
-    gabr human
+function usage(){
+    echo "Usage: gabr \
+$( [[ ${filename} = $usageFilename ]] && echo ${filename} || echo "$usageFilename $filename" )\
+$(_usageFiles)\
+$(_usageFunctions)\
+ -- e.g. gabr $usageFilename crash" >&2
 }
