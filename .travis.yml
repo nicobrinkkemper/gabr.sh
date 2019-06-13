@@ -1,7 +1,13 @@
 language: bash
 os:
   - linux"
-  
+
+before_install:
+  - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash -s -- --no-use
+  - echo 'export NVM_DIR=$HOME/.nvm' >> $BASH_ENV
+  - echo 'source $NVM_DIR/nvm.sh' >> $BASH_ENV
+  - nvm install stable
+
 env:
   - BASHVER=
   - BASHVER=3.2
@@ -11,12 +17,9 @@ env:
   - BASHVER=4.3
   - BASHVER=4.4
 
-
-
 matrix:
   include:
     - os: osx
-    - node_js: "stable"
 
 services:
   - docker
