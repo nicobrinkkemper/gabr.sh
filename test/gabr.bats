@@ -1,23 +1,31 @@
-
-@test "Gabr returns non error code" {
-    source ./gabr.sh
-    run gabr
-    echo failed-status="\"${status}\"" 1>&2
-    [[ $status -eq 0 ]]
-}
-
-function return127(){
-    exitcode=127
-    return 127
-}
-
 function return1(){
     exitcode=1
     return 1
 }
 
+function debug(){
+    echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
+    echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
+}
+
+function gabrLocation(){
+    if ! [ -f "./gabr.sh" ]; then
+        echo PWD=$PWD >&2
+        echo "Can't find gabr.sh" >&2
+        return 1
+    fi
+    echo "./gabr.sh"
+}
+
+@test "Gabr returns non error code" {
+    source $(gabrLocation)
+    run gabr
+    debug
+    [ $status -eq 0 ]
+}
+
 @test "Gabr errors the same return code" {
-    source ./gabr.sh
+    source $(gabrLocation)
     mkdir -p boo
     echo "\
 function boo(){
@@ -27,95 +35,82 @@ function boo(){
 " > boo/boo.sh
     GABR_ENV=dev
     run gabr boo
-    echo failed-status-dev="\"${status}\"" 1>&2
-    [[ "$status" -eq 123 ]]
+    debug
+    [ "$status" -gt 0 ]
     GABR_ENV=debug
     run gabr boo
-    echo failed-status-debug="\"${status}\"" 1>&2
-    [[ "$status" -eq 123 ]]
+    debug
+    [ "$status" -gt 0 ]
     GABR_ENV=prod
     run gabr boo
-    echo failed-status-prod="\"${status}\"" 1>&2
-    [[ "$status" -eq 123 ]]
+    debug
+    [ "$status" -gt 0 ]
     trap 'rm -rf ./boo' RETURN
 }
 
-@test "Gabr global errors when a file returns 127" {
-    source ./gabr.sh
+@test "Gabr global errors when a file exits" {
+    source $(gabrLocation)
     mkdir -p spooky
     echo "\
-spooky
+return 1
 " > spooky/spooky.sh
     GABR_ENV=dev
     run gabr spooky
-    echo failed-status-dev="\"${status}\"" 1>&2
-    [[ "$status" -eq 127 ]]
+    debug
+    [ "$status" -eq 1 ]
     GABR_ENV=debug
     run gabr spooky
-    echo failed-status-debug="\"${status}\"" 1>&2
-    [[ "$status" -eq 127 ]]
+    debug
+    [ "$status" -eq 1 ]
     GABR_ENV=prod
     run gabr spooky
-    echo failed-status-prod="\"${status}\"" 1>&2
-    [[ "$status" -eq 127 ]]
+    debug
+    [ "$status" -eq 1 ]
     trap 'rm -rf ./spooky' RETURN
 }
 
 @test "gabr errors when a function is undefined" {
-    source ./gabr.sh
+    source $(gabrLocation)
     GABR_ENV=dev
     run gabr undefined
-    echo failed-status-dev="\"${status}\"" 1>&2
-    [[ "$status" -eq 1 ]]
+    debug
+    [ "$status" -eq 1 ]
     GABR_ENV=debug
     run gabr undefined
-    echo failed-status-debug="\"${status}\"" 1>&2
-    [[ "$status" -eq 1 ]]
+    debug
+    [ "$status" -eq 1 ]
     GABR_ENV=prod
     run gabr undefined
-    echo failed-status-prod="\"${status}\"" 1>&2
-    [[ "$status" -eq 1 ]]
+    debug
+    [ "$status" -eq 1 ]
 }
 
 @test "gabr errors when a function returns 1" {
-    source ./gabr.sh
+    source $(gabrLocation)
     GABR_ENV=dev
     run gabr return1
-    [[ "$status" -eq 1 ]]
+    debug
+    [ "$status" -eq 1 ]
     GABR_ENV=debug
     run gabr return1
-    [[ "$status" -eq 1 ]]
+    debug
+    [ "$status" -eq 1 ]
     GABR_ENV=prod
     run gabr return1
-    [[ "$status" -eq 1 ]]
-}
-
-@test "gabr errors when a function returns 127" {
-    source ./gabr.sh
-    GABR_ENV=dev
-    run gabr return127
-    echo failed-status-dev="\"${status}\"" 1>&2
-    [[ "$status" -eq 127 ]]
-    GABR_ENV=debug
-    run gabr return127
-    echo failed-status-debug="\"${status}\"" 1>&2
-    [[ "$status" -eq 127 ]]
-    GABR_ENV=prod
-    run gabr return127
-    echo failed-status-prod="\"${status}\"" 1>&2
-    [[ "$status" -eq 127 ]]
+    debug
+    [ "$status" -eq 1 ]
 }
 
 @test "gabr crashes shell when env is prod" {
-    source ./gabr.sh
+    source $(gabrLocation)
     GABR_ENV=dev
-    result="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))"
+    result="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
     GABR_ENV=debug
-    result+="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))"
+    result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
     GABR_ENV=prod
-    result+="$(echo $(gabr return1; echo "${?}-${GABR_ENV}_"))" # can not print exit code due to crash of shell
+    result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))" # can not print due to crash of shell
     echo failed-result="\"${result}\"" 1>&2
-    [[ $result = "1-dev_1-debug_" ]]
+    [ $result = "dev_debug_" ]
 }
 
 @test "gabr does not walk over a error" {
@@ -125,16 +120,16 @@ spooky
         return $?
     }
     local exitcode=0 # needs to be set to a variable in order to inherit Gabr's exitcode\
-    source ./gabr.sh
+    source $(gabrLocation)
     GABR_ENV=dev
     run gabr undefined;
-    ! [[ -v iamnotdefined ]]
+    ! [ -v iamnotdefined ]
     GABR_ENV=debug
     run gabr undefined;
-    ! [[ -v iamnotdefined ]]
+    ! [ -v iamnotdefined ]
     GABR_ENV=prod
     run gabr undefined;
-    ! [[ -v iamnotdefined ]]
+    ! [ -v iamnotdefined ]
 }
 
 @test "Running and sourcing gabr only adds Gabr to scope" {
@@ -145,7 +140,7 @@ spooky
         difference ${@} 
     }
     local herestack=$(declare -F -f)
-    source ./gabr.sh
+    source $(gabrLocation)
     local -a result=($(
         gabr diffStack $(declare -F -f);
         echo -;
@@ -155,7 +150,7 @@ spooky
     ))
     local str=$(IFS=$' '; echo ${result[*]})
     echo failed-result=$str 1>&2
-    [[ $str = "- - gabr" ]]
+    [ "$str" = "- - gabr" ]
 
 }
 
@@ -167,11 +162,11 @@ function sayhi(){
 function saybye(){
     echo bye
 }" > ./sayhi.sh
-    source ./gabr.sh
+    source $(gabrLocation)
     local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./sayhi.sh' RETURN
-    [[ $result  = 'hi hi hi bye' ]]
+    [ "$result"  = 'hi hi hi bye' ]
 }
 
 @test "Gabr does not alter spaces in arguments" {
@@ -179,11 +174,11 @@ function saybye(){
 function whatdidisay(){
     echo \"\${@}\"
 }" > ./whatdidisay.sh
-    source ./gabr.sh
+    source $(gabrLocation)
     local result="$(gabr whatdidisay ' jim ' " has long " " cheeks ")"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./whatdidisay.sh' RETURN
-    [[ $result  = ' jim   has long   cheeks ' ]]
+    [ "$result"  = ' jim   has long   cheeks ' ]
 }
 
 @test "Gabr sees tabs as separator" {
@@ -191,11 +186,11 @@ function whatdidisay(){
 function spectabular(){
     echo \"\${@}\"
 }" > ./spectabular.sh
-    source ./gabr.sh
+    source $(gabrLocation)
     local result="$(gabr spectabular "$(echo -e '\t')<tabs>$(echo -e '\t')" "<ta$(echo -e '\t')bs>")"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./spectabular.sh' RETURN
-    [[ "$result"  = "<tabs> <ta bs>" ]]
+    [ "$result"  = "<tabs> <ta bs>" ]
 }
 
 
@@ -205,10 +200,10 @@ function spectabular(){
 function sophie(){
     echo Sophie
 }" > sophie/sophie.sh
-    source ./gabr.sh
+    source $(gabrLocation)
     local result="$(gabr sophie)"
     trap 'rm -rf sophie' RETURN
-    [[ "$result"  = "Sophie" ]]
+    [ "$result"  = "Sophie" ]
 }
 
 @test "Gabr runs in directory relative to file in which function is called" {
@@ -218,12 +213,12 @@ function whereru(){
     echo \${PWD}
 }
 " > whereru/whereru.sh
-    source ./gabr.sh
+    source $(gabrLocation)
     local localPWD=$(pwd)
     local result="$(gabr whereru)"
     echo failed-result="\"${result[@]: -8}\"" 1>&2
     trap 'rm -rf whereru' RETURN
-    [[ "${result[@]: -8}"  = "/whereru" ]]
+    [ "${result[@]: -8}"  = "/whereru" ]
 }
 
 @test "Gabr can cd to directories and run files" {
@@ -244,14 +239,9 @@ function bonito(){
     echo bonito >&2
     echo \"de wever\"
 }" > .jimtest/bonito.sh
-    source ./gabr.sh
+    source $(gabrLocation)
     local result="$(gabr $(gabr .jimtest jim))"
-    echo result="\"${result}\"" 1>&2
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -rf .jimtest' RETURN
-    [[ "$result"  = "de wever" ]]
-}
-
-@test "Gabr fails on overly recursive calls (max 50)" {
-    ! [[ "$(gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr gabr filename)" ]]
+    [ "$result"  = "de wever" ]
 }
