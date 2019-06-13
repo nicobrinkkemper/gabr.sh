@@ -8,9 +8,7 @@ RUN apk add --no-cache parallel && \
     mkdir -p ~/.parallel && touch ~/.parallel/will-cite
 
 RUN ln -s /opt/bats/bin/bats /usr/sbin/bats
-COPY ./modules/bats-core/ /opt/gabr/bats/
+COPY . /opt/bats/
 COPY ./gabr.sh /
-COPY ./test /opt/bats
-COPY ./gabr.linux.sh /
 
 ENTRYPOINT ["bash", "/usr/sbin/bats"]
