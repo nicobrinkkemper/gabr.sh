@@ -115,11 +115,11 @@ ${default:-usage}(){
     local prevFn=''
     while [ "$#" -ne 0 ];
     do
-        if [ -v 'fn' ]; then
+        if [ -z "${fn+set}" ]; then
             prevFn=$fn
         fi
         fn=${1:-$default}; shift; args=(${@});
-        if [ -v 'debug' ]; then
+        if [ -z "${debug+set}" ]; then
             echo "# -----------" >&2
         fi
         if [ "${fn::2}" = '-' ]; then
@@ -143,7 +143,7 @@ ${default:-usage}(){
                     source $fn
                     if [ "$(type -t ${filename})" = 'function' ]; then
                         if [ ${prevFn^^} = '--DERIVE' ] || [ -z "${args+set}" ] || [ ${args::1} = '-' ]; then
-                            if [ -v 'debug' ]; then
+                            if [ -z "${debug+set}" ]; then
                                 printf $wrapInfo "${fn} is derived" >&2
                             fi
                             set -- ${filename} ${args[@]:-}
@@ -152,7 +152,7 @@ ${default:-usage}(){
                 fi
             fi
         elif [ "$(type -t ${fn:-})" = 'function' ]; then
-            if [ -v 'debug' ]; then
+            if [ -z "${debug+set}" ]; then
                 printf "$wrapInfo" "Calling ${fn}" >&2
             fi
             cd $dir
@@ -177,7 +177,7 @@ ${default:-usage}(){
         elif ! [ "$PWD" = "$root" ]; then # allow the same as above, but in root directory
             cd $root
             set -- $fn ${args[@]:-}   
-            if [ -v 'debug' ]; then
+            if [ -z "${debug+set}" ]; then
                 printf $wrapInfo "Nothing found, switched to root as last resort" >&2
             fi         
         else
@@ -185,11 +185,11 @@ ${default:-usage}(){
             printf "$wrapErr" "${error[*]}" 1>&2
             return 1
         fi
-        if [ -v 'debug' ]; then
+        if [ -z "${debug+set}" ]; then
             for val in ${debug[@]}
             do
-                local valArr=${val}[@]
-                if [ -v '$'val ] || [ -n ${!valArr+set} ]; then
+                local valArr=${val:-}[@]
+                if [ -n "$valArr" ] && [ -n "${!valArr+set}" ]; then
                     echo "# $(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" >&2
                 fi
             done

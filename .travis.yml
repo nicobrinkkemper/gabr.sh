@@ -15,7 +15,7 @@ services:
   - docker
 
 script:
-- npm install --only=dev
+- npm --save-dev bats
 - |
   if [ "$TRAVIS_OS_NAME" = 'linux' ] && [ -n "$BASHVER" ]; then
     docker build --build-arg bashver=${BASHVER} --tag bats/bats:bash-${BASHVER} .
