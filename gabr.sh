@@ -17,9 +17,9 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if ((BASH_VERSINFO >= 4))
+if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
 then
-  source "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead
+  source "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead (which has minor benefits like file checking)
 else
 function gabr() {  # A function to run other functions 
     FUNCNEST=50
