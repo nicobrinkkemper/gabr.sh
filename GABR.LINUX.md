@@ -9,7 +9,7 @@ This file contains the original gabr function before it got butchered in order t
 
 The main benefit is cleaner code. But the draw-back is Bash 4.3+ only. 4.3+ supports
 associative arrays (-A) and -v flags. The -A flag is used to check if files are not being resourced, which
-is a minor extra feature. 
+is a minor extra feature. This file is automatically loaded if found and BASH_VERSION is 4.3+.
 
 ### Example
 
