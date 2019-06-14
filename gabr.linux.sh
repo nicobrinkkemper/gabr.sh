@@ -15,7 +15,14 @@
 #
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
-# 
+#
+if [ -n "${debug:-}" ] || [[ ${GABR_ENV:-} = 'debug' ]]; then
+    if [ -n "${debug:-}" ]; then
+        echo "# debug=(${debug[*]})"
+    fi
+    echo "# GABR_ENV=${GABR_ENV:-${env:-dev}}"
+    echo "# BASH_SOURCE=${BASH_SOURCE}"
+fi
 if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
 then
 function gabr() {  # A function to run other functions 
@@ -26,8 +33,8 @@ function gabr() {  # A function to run other functions
     if ! [[ -v filename ]]; then
         local filename
     fi
-    if ! [[ -v pathJuggle ]]; then
-        local pathJuggle
+    if ! [[ -v file ]]; then
+        local file
     fi
     if ! [[ -v exitcode ]]; then
         local exitcode
@@ -86,7 +93,7 @@ ${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to ca
                  Flags are optional and not needed in most cases."
     fi
     if ! [[ -v stack ]]; then
-        local stack=$(declare -F)
+        local stack=$(declare -f -F)
     fi
     if ! [[ -v wrapInfo ]]; then
         local wrapInfo="# "%s'\n'
@@ -105,7 +112,7 @@ ${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to ca
     if [[ $env = dev ]] || [[ $env = debug ]]; then
         set -Euo pipefail
     fi
-    trap 'exitcode=$?; cd $pwd; (exit $exitcode); return $exitcode' ERR SIGINT
+    trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
     if ! [[ "$(type -t $default)" = function ]]; then
         eval "\
 $default(){
@@ -146,8 +153,8 @@ $default(){
                 else
                     prevFn=$fn
                     fn=$1; shift; args=(${@});
-                    pathJuggle=${fn##*/}
-                    filename=${pathJuggle%%.*}
+                    file=${fn##*/}
+                    filename=${file%%.*}
                     files+=([$fn]=$fn)
                     source $fn
                     if [[ $(type -t ${filename}) = function ]]; then
@@ -167,7 +174,6 @@ $default(){
             cd $dir
             dir=.
             $fn ${args[@]:-};
-            cd $pwd
             return $?
         elif [[ -f $fn ]]; then # allow file
             set -- --file $fn ${args[@]:-}                             

@@ -8,8 +8,8 @@
     "release": "release-it"
   },
   "bin": {
-    "gabr": "./gabr.sh",
-    "gabr.linux": "./gabr.linux.sh"
+    "gabr.sh": "./gabr.sh",
+    "gabr.linux.sh": "./gabr.linux.sh"
   },
   "repository": {
     "type": "git",
