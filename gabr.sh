@@ -16,7 +16,7 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
+if [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [ -r "${BASH_SOURCE%\.sh*}.linux.sh" ]
 then
   source "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead (which has minor benefits like file checking)
 else
