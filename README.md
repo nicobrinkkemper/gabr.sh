@@ -37,7 +37,7 @@ gabr helloworld
 but gabr doesn't care. If it's a function, it will call it. This
 just proofs that. Now if you put it in a file called `helloworld.sh`,
 the command won't change. And you can go further and put it in a 
-directory called `helloworld`. To see this in code, see [HELLOWORLD.md](/examples/HELLOWORLD.md) 
+directory called `helloworld`. To see this in code, see [HELLOWORLD.md](./examples/HELLOWORLD.md) 
 
 ## Variables
 ### env (default:dev)
