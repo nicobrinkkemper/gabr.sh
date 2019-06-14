@@ -52,21 +52,21 @@ function deleteStale() {
 # @description Checkout other branch (e.g. master) then delete previous active branch
 # @example
 #   $ gabr example git deleteLocalBranch feature-branch
-# @arg string [ $1 ]          existing-checkout-branch (default:master) -- e.g. develop
-# @arg string [ $2 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
+# @arg string [ $1 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
+# @arg string [ $2 ]            existing-checkout-branch (default:master) -- e.g. develop
 # @arg string [ $3 | $remote ]  to-delete-remote (default:current) -- e.g. origin
 function deleteBranch() {
-    local checkout=${1:-master}
-    local branch=${2:-$branch}
+    local branch=${1:-$branch}
+    local checkout=${2:-master}
     local remote=${3:-remote}
     if [[ ${checkout} = ${branch} ]]; then
         echo "Checkout branch may not be the same as deleted branch" 1>&2
         return 1
     fi
     git checkout $checkout
-    git branch -d $branch
-    git branch -D $branch
-    git push $remote --delete $1
+    git branch -d $branch || echo "Already deleted"
+    git branch -D $branch || echo "Already deleted"
+    git push --delete $(git config --get remote.origin.url) $branch || echo "Already deleted"
 }
 
 # @description Delete a remote branch
