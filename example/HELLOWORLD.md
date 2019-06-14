@@ -1,4 +1,4 @@
-Fore more examples, see the [./example directory](./example).
+Fore more examples, see the example directory.
 
 # Hello world
 ```shell
