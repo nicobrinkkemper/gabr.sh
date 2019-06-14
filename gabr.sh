@@ -93,14 +93,19 @@ function gabr() {  # A function to run other functions
         default=${GABR_DEFAULT:-usage} # Optionally set a fixed namespace for 'usage' functionality
     fi
     # portable variable indirection
-    local safeDefault=$(echo "${default}" | tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lower:]')
-    if [ -z "$(eval echo \$\"${safeDefault}\")" ]; then
-        eval "local ${safeDefault}=\"\\
+    if [ -z "${usage:-}" ]; then
+        local usage="\
 ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
     --file       A full path to a file
     --derive     A filename without extension
     1..N         Performs various checks to derive flags and optimize the API.
-                 Flags are optional and not needed in most cases.\""
+                 Flags are optional and not needed in most cases."
+    fi
+    if ! [ "$default" = 'usage' ]; then
+        default="$(echo "${default}" | tr -dc "[:alnum:]" | tr "[:upper:]" "[:lower:]")" # should be save for eval, unless you're a wizard
+        if [ -z "$(eval echo \$${default})" ]; then
+            eval "local ${default}=\"${usage}\""
+        fi
     fi
     # Set prod mode
     if [ "$env" = 'prod' ]; then
@@ -116,10 +121,10 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
         set -eEuo pipefail
     fi
     trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
-    if ! [ "$(type -t ${safeDefault})" = 'function' ]; then
+    if ! [ "$(type -t ${default})" = 'function' ]; then
         eval "\
-${safeDefault}(){
-    eval echo \\\$\${default:-} >&2
+${default}(){
+    eval echo \${${default}:-'usage'} >&2
 }";
     fi
     if [ "$#" -eq 0 ]; then

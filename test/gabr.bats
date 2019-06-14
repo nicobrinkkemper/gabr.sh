@@ -5,6 +5,7 @@ function return1(){
 
 function debug(){
     echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
+    echo failed-output="\"${output}\"" 1>&2
     echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
 }
 
