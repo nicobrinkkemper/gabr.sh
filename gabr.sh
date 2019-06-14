@@ -70,15 +70,6 @@ function gabr() {  # A function to run other functions
     if [ -z "${root:-}" ]; then
         local root=$PWD
     fi
-    # portable variable indirection
-    if [ -z "$(eval echo \$${default})" ]; then
-        local ${default}="\
-${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
-    --file       A full path to a file
-    --derive     A filename without extension
-    1..N         Performs various checks to derive flags and optimize the API.
-                 Flags are optional and not needed in most cases."
-    fi
     if [ -z "${stack:-}" ]; then
         local stack=$(declare -F)
     fi
@@ -101,6 +92,16 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
     if [ -n "${GABR_DEFAULT:-}" ]; then
         default=${GABR_DEFAULT:-usage} # Optionally set a fixed namespace for 'usage' functionality
     fi
+    # portable variable indirection
+    local safeDefault=$(echo "${default}" | tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lower:]')
+    if [ -z "$(eval echo \$\"${safeDefault}\")" ]; then
+        eval "local ${safeDefault}=\"\\
+${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
+    --file       A full path to a file
+    --derive     A filename without extension
+    1..N         Performs various checks to derive flags and optimize the API.
+                 Flags are optional and not needed in most cases.\""
+    fi
     # Set prod mode
     if [ "$env" = 'prod' ]; then
         set -euo pipefail # this will crash terminal on error
@@ -115,10 +116,10 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
         set -eEuo pipefail
     fi
     trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
-    if ! [ "$(type -t $default)" = 'function' ]; then
+    if ! [ "$(type -t ${safeDefault})" = 'function' ]; then
         eval "\
-${default}(){
-    eval echo \\\$\${default} >&2
+${safeDefault}(){
+    eval echo \\\$\${default:-} >&2
 }";
     fi
     if [ "$#" -eq 0 ]; then

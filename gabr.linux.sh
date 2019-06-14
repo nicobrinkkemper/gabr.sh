@@ -75,22 +75,11 @@ function gabr() {  # A function to run other functions
     if [[ -v GABR_DEFAULT ]]; then
         default=$GABR_DEFAULT # Optionally set a fixed namespace for 'usage' functionality
     fi
-    if [[ $env = debug ]] && ! [[ -v debug ]]; then
-        debug=(fn args dir filename)
-    fi
     if ! [[ -v default ]]; then
         local default=usage # By default a function called 'usage' prints a variable called 'usage' through variable expansion
     fi
     if ! [[ -v root ]]; then
         local root=$PWD
-    fi
-    if ! [[ -v $default ]]; then
-        local $default="\
-${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to call other functions
-    --file       A full path to a file
-    --derive     A filename without extension
-    1..N         Performs various checks to derive flags and optimize the API.
-                 Flags are optional and not needed in most cases."
     fi
     if ! [[ -v stack ]]; then
         local stack=$(declare -f -F)
@@ -101,11 +90,24 @@ ${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to ca
     if ! [[ -v wrapErr ]]; then
         local wrapErr=$'\033[0;91m'"Warning: "%s$'\033[0m\n' # printfn LightRed with newline -- e.g. printfn ${wrapErr} "something went wrong"
     fi
+    if ! [[ -v $default ]]; then
+        local $default="\
+${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to call other functions
+    --file       A full path to a file
+    --derive     A filename without extension
+    1..N         Performs various checks to derive flags and optimize the API.
+                 Flags are optional and not needed in most cases."
+    fi
     if ! [[ -v error ]]; then
         local -a error=()
     fi
+    # Set prod mode
     if [[ $env = prod ]]; then
         set -euo pipefail # this will crash terminal on error
+    fi
+    # Set debug mode
+    if [[ $env = debug ]] && ! [[ -v debug ]]; then
+        debug=(fn args dir filename)
     fi
 ( # @enter subshell
     local IFS=$'\n\t'
