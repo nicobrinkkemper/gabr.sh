@@ -117,24 +117,24 @@ return 1
     source $(gabrLocation)
     GABR_ENV=dev
     debug=()
-    local normalOutput=$(gabr 2>&1)
+    local normalOutput="$(gabr 2>&1)"
     echo failed-normalOutput="\"${normalOutput}\"" 1>&2
     [ -n "$normalOutput" ]
     GABR_DEFAULT=help
-    local helpOutput=$(gabr 2>&1)
+    local helpOutput="$(gabr 2>&1)"
     echo failed-helpOutput="\"${helpOutput}\"" 1>&2
     [ "$helpOutput" = "$normalOutput" ]
-    local helpDirectCallOutput=$(gabr help 2>&1)
+    local helpDirectCallOutput="$(gabr help 2>&1)"
     echo failed-helpDirectCallOutput="\"${helpDirectCallOutput}\"" 1>&2
     [ "$helpDirectCallOutput" = "$helpOutput" ]
     local help='some-string' # this will be used by variable indirection
-    local helpStringOutput=$(gabr 2>&1)
+    local helpStringOutput="$(gabr 2>&1)"
     echo failed-helpStringOutput="\"${helpStringOutput}\"" 1>&2
     [ "$helpStringOutput" = "some-string" ]
     function help(){
         echo 'some-other-string'
     }
-    local helpFunctionOutput=$(gabr 2>&1)
+    local helpFunctionOutput="$(gabr 2>&1)"
     echo failed-helpFunctionOutput="\"${helpFunctionOutput}\"" 1>&2
     [ "$helpFunctionOutput" = "some-other-string" ]
 }
