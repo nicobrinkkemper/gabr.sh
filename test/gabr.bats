@@ -5,6 +5,7 @@ function return1(){
 
 function debug(){
     echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
+    echo failed-output="\"${output}\"" 1>&2
     echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
 }
 
@@ -111,6 +112,32 @@ return 1
     result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))" # can not print due to crash of shell
     echo failed-result="\"${result}\"" 1>&2
     [ $result = "dev_debug_" ]
+}
+
+@test "gabr can change default functionality with GABR_DEFAULT / variable indirection" {
+    source $(gabrLocation)
+    GABR_ENV=dev
+    debug=()
+    local normalOutput="$(gabr 2>&1)"
+    echo failed-normalOutput="\"${normalOutput}\"" 1>&2
+    [ -n "$normalOutput" ]
+    GABR_DEFAULT=help
+    local helpOutput="$(gabr 2>&1)"
+    echo failed-helpOutput="\"${helpOutput}\"" 1>&2
+    [ "$helpOutput" = "$normalOutput" ]
+    local helpDirectCallOutput="$(gabr help 2>&1)"
+    echo failed-helpDirectCallOutput="\"${helpDirectCallOutput}\"" 1>&2
+    [ "$helpDirectCallOutput" = "$helpOutput" ]
+    local help='some-string' # this will be used by variable indirection
+    local helpStringOutput="$(gabr 2>&1)"
+    echo failed-helpStringOutput="\"${helpStringOutput}\"" 1>&2
+    [ "$helpStringOutput" = "some-string" ]
+    function help(){
+        echo 'some-other-string'
+    }
+    local helpFunctionOutput="$(gabr 2>&1)"
+    echo failed-helpFunctionOutput="\"${helpFunctionOutput}\"" 1>&2
+    [ "$helpFunctionOutput" = "some-other-string" ]
 }
 
 @test "gabr does not walk over a error" {

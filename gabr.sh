@@ -16,9 +16,16 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
+if [ -n "${debug:-}" ] || [[ ${GABR_ENV:-} = 'debug' ]]; then
+    if [ -n "${debug:-}" ]; then
+        echo "# debug=(${debug[*]})"
+    fi
+    echo "# GABR_ENV=${GABR_ENV:-${env:-}}"
+    echo "# BASH_SOURCE=${BASH_SOURCE}"
+fi
+if [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [ -r "${BASH_SOURCE%\.sh*}.linux.sh" ]
 then
-  source "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead (which has minor benefits like file checking)
+  . "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead (which has minor benefits like file checking)
 else
 function gabr() {  # A function to run other functions 
     FUNCNEST=50
@@ -28,8 +35,8 @@ function gabr() {  # A function to run other functions
     if [ -z "${filename:-}" ]; then
         local filename
     fi
-    if [ -z "${pathJuggle:-}" ]; then
-        local pathJuggle
+    if [ -z "${file:-}" ]; then
+        local file
     fi
     if [ -z "${exitcode:-}" ]; then
         local exitcode
@@ -39,7 +46,7 @@ function gabr() {  # A function to run other functions
     elif [ $# -eq 0 ]; then
         set -- ${args[@]:-}
     fi
-    if [ -z "${debug:-}" ]; then
+    if [ -z "${debug[@]:-}" ]; then
         local -a debug=()
     fi
     if [ -z "${fn:-}" ]; then
@@ -57,22 +64,11 @@ function gabr() {  # A function to run other functions
     if [ -z "${pwd:-}" ]; then
         local pwd="${PWD}"
     fi
-    if [ "$env" = 'debug' ] && [ -z "${debug:-}" ]; then
-        debug=(fn args dir filename)
-    fi
     if [ -z "${default:-}" ]; then
-        local default=usage 
+        local default=usage
     fi
     if [ -z "${root:-}" ]; then
         local root=$PWD
-    fi
-    if [ -z "${usage:-}" ]; then
-        local usage="\
-${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
-    --file       A full path to a file
-    --derive     A filename without extension
-    1..N         Performs various checks to derive flags and optimize the API.
-                 Flags are optional and not needed in most cases."
     fi
     if [ -z "${stack:-}" ]; then
         local stack=$(declare -F)
@@ -87,29 +83,48 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
         local -a error=()
     fi
     # Set from globals
-    if ! [ -z "${GABR_ROOT:-}" ]; then
+    if [ -n "${GABR_ROOT:-}" ]; then
         root=${GABR_ROOT:-${PWD}} # Optionally set a fixed root through a global
     fi
-    if ! [ -z "${GABR_ENV:-}" ]; then
+    if [ -n "${GABR_ENV:-}" ]; then
         env=${GABR_ENV:-dev}
     fi
-    if ! [ -z "${GABR_DEFAULT:-}" ]; then
+    if [ -n "${GABR_DEFAULT:-}" ]; then
         default=${GABR_DEFAULT:-usage} # Optionally set a fixed namespace for 'usage' functionality
+    fi
+    # portable variable indirection
+    if [ -z "${usage:-}" ]; then
+        local usage="\
+${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to call other functions
+    --file       A full path to a file
+    --derive     A filename without extension
+    1..N         Performs various checks to derive flags and optimize the API.
+                 Flags are optional and not needed in most cases."
+    fi
+    if ! [ "$default" = 'usage' ]; then
+        default="$(echo "${default}" | tr -dc "[:alnum:]" | tr "[:upper:]" "[:lower:]")" # should be save for eval, unless you're a wizard
+        if [ -z "$(eval echo \$${default})" ]; then
+            eval "local ${default}=\"${usage}\""
+        fi
     fi
     # Set prod mode
     if [ "$env" = 'prod' ]; then
         set -euo pipefail # this will crash terminal on error
+    fi
+    # Set debug mode
+    if [ "$env" = 'debug' ] && [ -z "${debug:-}" ]; then
+        debug=(fn args dir filename)
     fi
 ( # @enter subshell
     local IFS=$'\n\t'
     if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
         set -eEuo pipefail
     fi
-    trap 'exitcode=$?; cd $pwd; (exit $exitcode); return $exitcode' ERR SIGINT
-    if ! [ "$(type -t $default)" = 'function' ]; then
+    trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
+    if ! [ "$(type -t ${default})" = 'function' ]; then
         eval "\
-${default:-usage}(){
-    echo \"\${usage}\" >&2
+${default}(){
+    eval echo \${${default}:-'usage'} >&2
 }";
     fi
     if [ "$#" -eq 0 ]; then
@@ -142,9 +157,9 @@ ${default:-usage}(){
                 else
                     prevFn=$fn
                     fn=$1; shift; args=(${@:-});
-                    pathJuggle=${fn##*/}
-                    filename=${pathJuggle%%.*}
-                    source $fn
+                    file=${fn##*/}
+                    filename=${file%%.*}
+                    . $fn # source the file
                     if [ "$(type -t ${filename})" = 'function' ]; then
                         if [ "${prevFn}" = '--derive' ] || [ -z "${args:-}" ] || [ ${args::1} = '-' ]; then
                             if [ -n "${debug:-}" ]; then

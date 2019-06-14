@@ -15,7 +15,14 @@
 #
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
-# 
+#
+if [ -n "${debug:-}" ] || [[ ${GABR_ENV:-} = 'debug' ]]; then
+    if [ -n "${debug:-}" ]; then
+        echo "# debug=(${debug[*]})"
+    fi
+    echo "# GABR_ENV=${GABR_ENV:-${env:-dev}}"
+    echo "# BASH_SOURCE=${BASH_SOURCE}"
+fi
 if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
 then
 function gabr() {  # A function to run other functions 
@@ -26,8 +33,8 @@ function gabr() {  # A function to run other functions
     if ! [[ -v filename ]]; then
         local filename
     fi
-    if ! [[ -v pathJuggle ]]; then
-        local pathJuggle
+    if ! [[ -v file ]]; then
+        local file
     fi
     if ! [[ -v exitcode ]]; then
         local exitcode
@@ -68,14 +75,20 @@ function gabr() {  # A function to run other functions
     if [[ -v GABR_DEFAULT ]]; then
         default=$GABR_DEFAULT # Optionally set a fixed namespace for 'usage' functionality
     fi
-    if [[ $env = debug ]] && ! [[ -v debug ]]; then
-        debug=(fn args dir filename)
-    fi
     if ! [[ -v default ]]; then
         local default=usage # By default a function called 'usage' prints a variable called 'usage' through variable expansion
     fi
     if ! [[ -v root ]]; then
         local root=$PWD
+    fi
+    if ! [[ -v stack ]]; then
+        local stack=$(declare -f -F)
+    fi
+    if ! [[ -v wrapInfo ]]; then
+        local wrapInfo="# "%s'\n'
+    fi
+    if ! [[ -v wrapErr ]]; then
+        local wrapErr=$'\033[0;91m'"Warning: "%s$'\033[0m\n' # printfn LightRed with newline -- e.g. printfn ${wrapErr} "something went wrong"
     fi
     if ! [[ -v $default ]]; then
         local $default="\
@@ -85,27 +98,23 @@ ${FUNCNAME} [--file]] [--derive] [file] function [arguments] -- A function to ca
     1..N         Performs various checks to derive flags and optimize the API.
                  Flags are optional and not needed in most cases."
     fi
-    if ! [[ -v stack ]]; then
-        local stack=$(declare -F)
-    fi
-    if ! [[ -v wrapInfo ]]; then
-        local wrapInfo="# "%s'\n'
-    fi
-    if ! [[ -v wrapErr ]]; then
-        local wrapErr=$'\033[0;91m'"Warning: "%s$'\033[0m\n' # printfn LightRed with newline -- e.g. printfn ${wrapErr} "something went wrong"
-    fi
     if ! [[ -v error ]]; then
         local -a error=()
     fi
+    # Set prod mode
     if [[ $env = prod ]]; then
         set -euo pipefail # this will crash terminal on error
+    fi
+    # Set debug mode
+    if [[ $env = debug ]] && ! [[ -v debug ]]; then
+        debug=(fn args dir filename)
     fi
 ( # @enter subshell
     local IFS=$'\n\t'
     if [[ $env = dev ]] || [[ $env = debug ]]; then
         set -Euo pipefail
     fi
-    trap 'exitcode=$?; cd $pwd; (exit $exitcode); return $exitcode' ERR SIGINT
+    trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
     if ! [[ "$(type -t $default)" = function ]]; then
         eval "\
 $default(){
@@ -146,8 +155,8 @@ $default(){
                 else
                     prevFn=$fn
                     fn=$1; shift; args=(${@});
-                    pathJuggle=${fn##*/}
-                    filename=${pathJuggle%%.*}
+                    file=${fn##*/}
+                    filename=${file%%.*}
                     files+=([$fn]=$fn)
                     source $fn
                     if [[ $(type -t ${filename}) = function ]]; then
@@ -167,7 +176,6 @@ $default(){
             cd $dir
             dir=.
             $fn ${args[@]:-};
-            cd $pwd
             return $?
         elif [[ -f $fn ]]; then # allow file
             set -- --file $fn ${args[@]:-}                             
