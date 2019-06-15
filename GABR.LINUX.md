@@ -1,21 +1,25 @@
 # gabr.linux.sh
 
-This file contains the original gabr function before it got butchered in order to support older Bash versions.
+This file contains the leanest `gabr` implementation
 
 * [gabr()](#gabr)
 
 
 ## gabr()
 
-The main benefit is cleaner code. But the draw-back is Bash 4.3+ only. 4.3+ supports
-associative arrays (-A) and -v flags. The -A flag is used to check if files are not being resourced, which
-is a minor extra feature. This file is automatically loaded if found and BASH_VERSION is 4.3+.
+The gabr function will be available after sourcing this file.
+This file supports bash 4.3+, this is to add benefit for Linux machines.
+This file is optional. Both files can be used as stand-alones.
+This file acts as a function when called as a file.
 
 ### Example
 
 ```bash
-$ debug=(files)
-$ gabr example human smile
+$ gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
+  --file       A full path to a file
+  --derive     A filename without extension
+  1..N         Performs various checks to derive flags
+               Flags are optional and not needed in most cases
 ```
 
 ### Arguments

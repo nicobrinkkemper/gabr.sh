@@ -1,6 +1,6 @@
 # gabr.sh
 
-This file contains one function and acts as that function when called as a file.
+This file contains the most stable `gabr` implementation
 
 * [gabr()](#gabr)
 
@@ -8,15 +8,19 @@ This file contains one function and acts as that function when called as a file.
 ## gabr()
 
  The gabr function will be available after sourcing this file.
-Tt sources a more modern version of the function if BASH_VERSION is 4.3+
-Fear not, these files behave almost identical.
+This file supports bash 3.2+, this is to support apple machines.
+This file sources a modern version of the function if applicable.
+This file is optional. Both files can be used as stand-alones.
+This file acts as a function when called as a file.
 
 ### Example
 
 ```bash
-$ gabr example human smile
-This is human
-:)
+$ gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
+  --file       A full path to a file
+  --derive     A filename without extension
+  1..N         Performs various checks to derive flags
+               Flags are optional and not needed in most cases
 ```
 
 ### Arguments

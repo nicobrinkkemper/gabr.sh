@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # @file gabr.sh
-# @brief This file contains one function and acts as that function when called as a file.
+# @brief This file contains the most stable `gabr` implementation
 # @description  The gabr function will be available after sourcing this file.
-# Tt sources a more modern version of the function if BASH_VERSION is 4.3+
-# Fear not, these files behave almost identical.
+# This file supports bash 3.2+, this is to support apple machines.
+# This file sources a modern version of the function if applicable.
+# This file is optional. Both files can be used as stand-alones.
+# This file acts as a function when called as a file.
 #
 # @example
-#   $ gabr example human smile
-#   This is human
-#   :)
+#   $ gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
+#     --file       A full path to a file
+#     --derive     A filename without extension
+#     1..N         Performs various checks to derive flags
+#                  Flags are optional and not needed in most cases
 #
 # @arg $1 string A file, directory or function
 # @arg $@ any Will be shifted through until a valid function is found
@@ -23,9 +27,9 @@ if [ -n "${debug:-}" ] || [[ ${GABR_ENV:-} = 'debug' ]]; then
     echo "# GABR_ENV=${GABR_ENV:-${env:-}}"
     echo "# BASH_SOURCE=${BASH_SOURCE}"
 fi
-if [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [ -r "${BASH_SOURCE%\.sh*}.linux.sh" ]
-then
-  . "${BASH_SOURCE%\.sh*}.linux.sh" # we can source linux instead (which has minor benefits like file checking)
+# we can source linux version if available (has minor benefits like file checking)
+if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
+    . "${BASH_SOURCE%\.sh*}.linux$([ "${BASH_SOURCE}" != "${BASH_SOURCE%\.sh*}" ] && echo .sh)"
 else
 function gabr() {  # A function to run other functions 
     FUNCNEST=50
@@ -84,13 +88,13 @@ function gabr() {  # A function to run other functions
     fi
     # Set from globals
     if [ -n "${GABR_ROOT:-}" ]; then
-        root=${GABR_ROOT:-${PWD}} # Optionally set a fixed root through a global
+        root=${GABR_ROOT:-} # Optionally set a fixed root through a global
     fi
     if [ -n "${GABR_ENV:-}" ]; then
-        env=${GABR_ENV:-dev}
+        env=${GABR_ENV:-}
     fi
     if [ -n "${GABR_DEFAULT:-}" ]; then
-        default=${GABR_DEFAULT:-usage} # Optionally set a fixed namespace for 'usage' functionality
+        default=${GABR_DEFAULT:-} # Optionally set a fixed namespace for 'usage' functionality
     fi
     # portable variable indirection
     if [ -z "${usage:-}" ]; then
@@ -120,7 +124,7 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
     if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
         set -eEuo pipefail
     fi
-    trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
+    trap 'exitcode=$?; if [[ -v debug ]]; then  (exit $exitcode); return $exitcode' ERR SIGINT
     if ! [ "$(type -t ${default})" = 'function' ]; then
         eval "\
 ${default}(){
@@ -161,7 +165,7 @@ ${default}(){
                     filename=${file%%.*}
                     . $fn # source the file
                     if [ "$(type -t ${filename})" = 'function' ]; then
-                        if [ "${prevFn}" = '--derive' ] || [ -z "${args:-}" ] || [ ${args::1} = '-' ]; then
+                        if [ "${prevFn}" = '--derive' ] || [ -z "${args:-}" ] || [ "${args::1}" = '-' ] || [ "$filename" = "$fn" ]; then
                             if [ -n "${debug:-}" ]; then
                                 printf "$wrapInfo" "${fn} is derived" >&2
                             fi

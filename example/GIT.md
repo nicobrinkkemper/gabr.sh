@@ -65,8 +65,8 @@ $ gabr example git deleteLocalBranch feature-branch
 
 ### Arguments
 
-* string [ $1 ]          existing-checkout-branch (default:master) -- e.g. develop
-* string [ $2 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
+* string [ $1 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
+* string [ $2 ]            existing-checkout-branch (default:master) -- e.g. develop
 * string [ $3 | $remote ]  to-delete-remote (default:current) -- e.g. origin
 
 ## deleteTag()

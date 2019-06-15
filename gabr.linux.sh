@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # @file gabr.linux.sh
-# @brief This file contains the original gabr function before it got butchered in order to support older Bash versions.
-#
-# @description The main benefit is cleaner code. But the draw-back is Bash 4.3+ only. 4.3+ supports
-# associative arrays (-A) and -v flags. The -A flag is used to check if files are not being resourced, which
-# is a minor extra feature. This file is automatically loaded if found and BASH_VERSION is 4.3+.
+# @brief This file contains the leanest `gabr` implementation
+# @description The gabr function will be available after sourcing this file.
+# This file supports bash 4.3+, this is to add benefit for Linux machines.
+# This file is optional. Both files can be used as stand-alones.
+# This file acts as a function when called as a file.
 #
 # @example
-#   $ debug=(files)
-#   $ gabr example human smile
+#   $ gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
+#     --file       A full path to a file
+#     --derive     A filename without extension
+#     1..N         Performs various checks to derive flags
+#                  Flags are optional and not needed in most cases
 #
 # @arg $1 string A file, directory or function
 # @arg $@ any Will be shifted through until a valid function is found
@@ -57,7 +60,7 @@ function gabr() {  # A function to run other functions
         local primaryFn=${1:-}
     fi
     if ! ((${#files[@]})); then
-        local -A files=([$BASH_SOURCE]=$BASH_SOURCE)
+        local -A files=()
     fi
     if ! [[ -v env ]]; then
         local env=dev
@@ -158,9 +161,9 @@ $default(){
                     file=${fn##*/}
                     filename=${file%%.*}
                     files+=([$fn]=$fn)
-                    source $fn
+                    . $fn
                     if [[ $(type -t ${filename}) = function ]]; then
-                        if [[ ${prevFn^^} = '--DERIVE' ]] || ! [[ -v args ]] || [[ ${args::1} = '-' ]]; then
+                        if [[ ${prevFn^^} = '--DERIVE' ]] || ! [[ -v args ]] || [[ ${args::1} = '-' ]] || [[ $filename = $fn ]]; then
                             if [[ -v debug ]]; then
                                 printf $wrapInfo "${fn} is derived" >&2
                             fi
@@ -169,7 +172,7 @@ $default(){
                     fi
                 fi
             fi
-        elif [[ "$(type -t ${fn:-})" = function ]]; then
+        elif [[ $(type -t ${fn:-}) = function ]]; then
             if [[ -v debug ]]; then
                 printf "$wrapInfo" "Calling ${fn}" >&2
             fi
@@ -216,4 +219,8 @@ $default(){
 # @close subshell
 )
 }
+fi
+if [ "$0" = "$BASH_SOURCE" ]; then
+    declare IFS=$'\n\t'
+    gabr ${*}
 fi

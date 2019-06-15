@@ -39,7 +39,7 @@ function hello() {
     gabr
 }
 
-if ! [[ \$(type -t world) = function ]]; then
+if ! [ \"\$(type -t world)\" = 'function' ]; then
   function world() {
     echo world
     unset -f world

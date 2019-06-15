@@ -19,7 +19,7 @@ function currentBranch() {
 #   $ gabr example git root
 #   ~/Code/your/project
 function root(){
-    git rev-parse --show-toplevel;
+    command git rev-parse --show-toplevel;
 }
 
 
@@ -65,7 +65,6 @@ function deleteBranch() {
     fi
     git checkout $checkout
     git branch -d $branch || echo "Already deleted"
-    git branch -D $branch || echo "Already deleted"
     git push --delete $(git config --get remote.origin.url) $branch || echo "Already deleted"
 }
 
