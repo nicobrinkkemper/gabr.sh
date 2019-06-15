@@ -124,7 +124,7 @@ ${FUNCNAME} [--file] [--derive] [file] function [arguments] -- A function to cal
     if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
         set -eEuo pipefail
     fi
-    trap 'exitcode=$?; if [[ -v debug ]]; then  (exit $exitcode); return $exitcode' ERR SIGINT
+    trap 'exitcode=$?; (exit $exitcode); return $exitcode' ERR SIGINT
     if ! [ "$(type -t ${default})" = 'function' ]; then
         eval "\
 ${default}(){
