@@ -193,11 +193,11 @@ foo
 | variable     	| type  	| description                              	| default                                	| Note                                    	|
 |--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
 | prevFn       	|       	| The previous value of fn                 	|                                        	|                                         	|
-| primaryFn    	|       	| The first argument                       	| $1                                     	|                                         	|
 | error        	| -a    	| The error messages                       	| ()                                     	| Will be printed on internal errors      	|
 | exitcode     	|       	| The error exitcode                       	|                                        	| Set on ERR SIGINT trap                  	|
 | wrapInfo     	|       	| `printf` helper for debug messages       	| "# "%s'\n'                             	| # some message                          	|
 | wrapErr      	|       	| `printf` helper for error messages       	| $'\033[0;91m'"Warning: "%s$'\033[0m\n' 	| Warning: light red color                	|
+| primaryFn    	|       	| The first argument                       	| $1                                     	| Not used internally                      	|
 | pwd          	|       	| Initial directory                        	|                                        	| Not used internally                     	|
 | funcname     	| -a    	| Initial previously called functions      	| ${FUNCNAME[@]}                         	| Not used internally                     	|
-| stack        	|       	| Initial available functions              	|                                        	| Not used internally                     	|
+| stack        	|       	| Initial available functions              	| declare -F                             	| Not used internally                     	|
