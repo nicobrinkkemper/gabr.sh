@@ -1,4 +1,0 @@
-helloworld () 
-{ 
-    echo hello world
-}
