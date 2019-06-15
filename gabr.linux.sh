@@ -3,7 +3,7 @@
 # @brief This file contains the leanest `gabr` implementation
 # @description The gabr function will be available after sourcing this file.
 # This file supports bash 4.3+, this is to add benefit for Linux machines.
-# This file is optional. Both files can be used as stand-alones.
+# This file is optional. Both `gabr.sh` and `gabr.linux.sh` work as stand-alones.
 # This file acts as a function when called as a file.
 #
 # @example

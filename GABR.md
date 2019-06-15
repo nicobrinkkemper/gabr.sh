@@ -10,7 +10,6 @@ This file contains the most stable `gabr` implementation
  The gabr function will be available after sourcing this file.
 This file supports bash 3.2+, this is to support apple machines.
 This file sources a modern version of the function if applicable.
-This file is optional. Both files can be used as stand-alones.
 This file acts as a function when called as a file.
 
 ### Example
