@@ -1,6 +1,10 @@
 
-## Debug Example
-This example assumes you have the gabr function sourced.
+# Debug Example
+```shell
+$ source gabr.sh || source $(which gabr)
+```
+> Source the `gabr` function
+
 ```shell
 $ function debug(){
   declare -p $@
@@ -9,9 +13,8 @@ $ function debug(){
 > Write a simple function
 
 ```shell
-$ gabr debug BASH_VERSION BASH_SOURCE
+$ gabr debug BASH_VERSION
 # declare -- BASH_VERSION="4.4.19(1)-release"
-# declare -a BASH_SOURCE=([0]="main" [1]="/home/usr/.nvm/versions/node/v11.7.0/bin/gabr.linux")
 ```
 > Right. It called that function on the spot
 
@@ -23,7 +26,10 @@ $ unset -f debug
 
 ```shell
 $ gabr debug BASH_SOURCE
-# declare -a BASH_SOURCE=([0]="./debug.sh" [1]="/home/usr/.nvm/versions/node/v11.7.0/bin/gabr.linux")
+# declare -a BASH_SOURCE=(
+    [0]="./debug.sh"
+    [1]="/home/usr/.nvm/versions/node/v11.7.0/bin/gabr.linux"
+)
 ```
 > Right, it still called it. Now let's debug something.
 
@@ -41,7 +47,7 @@ function badarray() {
 > This would be a nasty case to debug 
 
 ```shell
-$ gabr debug badarray
+$ gabr debug badarray && echo $?
 # args=([0]="badarray")
 # -----------
 # Calling badarray
@@ -49,4 +55,3 @@ foo
 ./debug.sh: line 6: foo: bad array subscript
 ```
 > Fair enough. Gabr debugged it by not debugging it.
-> For more examples crash, checkout the example directory.

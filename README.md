@@ -75,40 +75,12 @@ If any of these already exist, they will be inherited.
 | env          	|       	| The strictness of the function           	| dev                                    	|                                         	|
 | root         	|       	| The fallback directory                   	| $PWD                                   	|                                         	|
 | default      	|       	| Name of fallback function                	| usage                                  	|                                         	|
-| $default     	|       	| String printed by fallback function      	| "Usage: gabr [file] function..."       	| created through variable indirection    	|
-| files        	| -A    	| All included files                       	| ()                	| BASH 4.3+                               	|
-| file         	|       	| Recently imported file                   	|                                        	|                                         	|
-| filename     	|       	| Recently imported file without extension 	|                                        	|                                         	|
+| $default     	|       	| String printed by fallback function      	| $usage                                   	| Variable indirection/eval               	|
+| usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | fn           	|       	| The called function                      	| usage                                  	|                                         	|
 | args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@} in sourced files 	|
 | dir          	|       	| The directory to run the function in     	| .                                      	|                                         	|
 
-### Miscellaneous Variables
-These values wil be available in sourced files.
-
-| variable     	| type  	| description                              	| default                                	| Note                                    	|
-|--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
-| prevFn       	|       	| The previous value of fn                 	|                                        	|                                         	|
-| error        	| -a    	| The error messages                       	| ()                                     	| Will be printed on internal errors      	|
-| exitcode     	|       	| The error exitcode                       	|                                        	| Set on ERR SIGINT trap                  	|
-| wrapInfo     	|       	| `printf` helper for debug messages       	| "# "%s'\n'                             	| # some message                          	|
-| wrapErr      	|       	| `printf` helper for error messages       	| $'\033[0;91m'"Warning: "%s$'\033[0m\n' 	| Warning: light red color                	|
-| primaryFn    	|       	| The first argument                       	| $1                                     	| Not used internally                      	|
-| pwd          	|       	| Initial directory                        	|                                        	| Not used internally                     	|
-| funcname     	| -a    	| Initial previously called functions      	| ${FUNCNAME[@]}                         	| Not used internally                     	|
-| stack        	|       	| Initial available functions              	| declare -F                             	| Not used internally                     	|
-
 ## Flags
 
-Gabr does not require any flags. The flags will be automatically assigned
-based on user input. Only one argument is needed to call a function if files and directories are named a like. Nonetheless, they can still provide information.
-
-#### --file
-A full path to a file. This flag will be derived if a argument is a valid
-path to a file. If the argument is a valid function name after source, it will
-be called.
-
-#### --derive
-A name of a file without extension. This flag will be derived if a file
-exists. If the argument is a valid function name after source, it will
-be called.
+Gabr does not require any flags. Gabr does however stops on any argument that starts with a dash (-)

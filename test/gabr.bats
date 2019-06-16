@@ -18,6 +18,24 @@ function gabrLocation(){
     echo "./gabr.sh"
 }
 
+
+
+@test "Gabr can find a file and run it's functions" {
+    echo "\
+printf %s sourced
+function sayhi(){
+    printf %s hi
+}
+function saybye(){
+    printf %s bye
+}" > ./sayhi.sh
+    source $(gabrLocation)
+    local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
+    echo failed-result="\"${result}\"" 1>&2
+    trap 'rm -f ./sayhi.sh' RETURN
+    [ "$result"  = 'sourcedhi sourced sourcedhi sourcedbye' ]
+}
+
 @test "Gabr returns non error code" {
     source $(gabrLocation)
     run gabr
@@ -168,6 +186,7 @@ return 1
     }
     local herestack=$(declare -F -f)
     source $(gabrLocation)
+    local stack="$(declare -F)"
     local -a result=($(
         gabr diffStack $(declare -F -f);
         echo -;
@@ -181,20 +200,6 @@ return 1
 
 }
 
-@test "Gabr can find a file and run it's functions" {
-    echo "\
-function sayhi(){
-    echo hi
-}
-function saybye(){
-    echo bye
-}" > ./sayhi.sh
-    source $(gabrLocation)
-    local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
-    echo failed-result="\"${result}\"" 1>&2
-    trap 'rm -f ./sayhi.sh' RETURN
-    [ "$result"  = 'hi hi hi bye' ]
-}
 
 @test "Gabr does not alter spaces in arguments" {
     echo "\
@@ -253,19 +258,19 @@ function whereru(){
     echo "\
 function jim(){
     echo jim >&2
-    echo .jimtest/willem.sh 
+    echo .jimtest/willem.sh willem
 }" > .jimtest/jim.sh
 echo "\
 dir="\${dir:-.}/.jimtest"
 function willem(){
     echo willem >&2
-    gabr ./bonito.sh
+    gabr bonito bonito
 }" > .jimtest/willem.sh
 echo "\
 function bonito(){
     echo bonito >&2
     echo \"de wever\"
-}" > .jimtest/bonito.sh
+}" > .jimtest/bonito
     source $(gabrLocation)
     local result="$(gabr $(gabr .jimtest jim))"
     echo failed-result="\"${result}\"" 1>&2
