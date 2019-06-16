@@ -131,7 +131,7 @@ EOF
             break
         elif [ "$(type -t ${fn})" = 'function' ]; then
             if [ -n "${debug:-}" ]; then
-                printf "# "%s'\n' "Calling ${@:-}" >&2
+                printf "# "%s'\n' "Calling ${fn}" >&2
             fi
             cd $dir
             dir=.
