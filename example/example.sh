@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 if [ -z "${stack:-}" ]; then
     local stack=$(declare -F)
+    local pathJuggle=${fn##*/}
+    local filename=${pathJuggle%%.*}
 fi
+echo @=${@}
 if [[ $# -eq 0 ]]; then
     set -- usage # This is how usage is forced when no arguments given
     # sidenote: running a file is legit the same thing as running a function
@@ -40,6 +43,7 @@ function _usageFiles(){
 }
 
 function usage(){
+    set +x
     echo "Usage: gabr \
 $( [[ ${filename} = $usageFilename ]] && echo ${filename} || echo "$usageFilename $filename" )\
 $(_usageFiles)\

@@ -83,4 +83,5 @@ If any of these already exist, they will be inherited.
 
 ## Flags
 
-Gabr does not require any flags. Gabr does however stops on any argument that starts with a dash (-)
+Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-). Be aware that
+gabr will stop no questions asked and run the last function of fn.
