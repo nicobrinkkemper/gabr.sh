@@ -9,15 +9,15 @@ function debug(){
     echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
 }
 
-function gabrLocation(){
-    if ! [ -f "./gabr.sh" ]; then
-        echo PWD=$PWD >&2
-        echo "Can't find gabr.sh" >&2
-        return 1
+if ! [ -f "./gabr.sh" ]; then
+    if [ -f "/opt/gabr/gabr.sh" ]; then
+        cd /opt/gabr/
+    else
+        echo PWD=$PWD 1>&2
+        echo "Can't find gabr.sh" 1>&2
+        (exit 1)
     fi
-    echo "./gabr.sh"
-}
-
+fi
 
 
 @test "Gabr can find a file and run it's functions" {
@@ -29,7 +29,7 @@ function sayhi(){
 function saybye(){
     printf %s bye
 }" > ./sayhi.sh
-    source $(gabrLocation)
+    source gabr.sh
     local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./sayhi.sh' RETURN
@@ -37,14 +37,14 @@ function saybye(){
 }
 
 @test "Gabr returns non error code" {
-    source $(gabrLocation)
+    source gabr.sh
     run gabr
     debug
     [ $status -eq 0 ]
 }
 
 @test "Gabr errors the same return code" {
-    source $(gabrLocation)
+    source gabr.sh
     mkdir -p boo
     echo "\
 function boo(){
@@ -68,7 +68,7 @@ function boo(){
 }
 
 @test "Gabr global errors when a file exits" {
-    source $(gabrLocation)
+    source gabr.sh
     mkdir -p spooky
     echo "\
 return 1
@@ -89,7 +89,7 @@ return 1
 }
 
 @test "gabr errors when a function is undefined" {
-    source $(gabrLocation)
+    source gabr.sh
     GABR_ENV=dev
     run gabr undefined
     debug
@@ -105,7 +105,7 @@ return 1
 }
 
 @test "gabr errors when a function returns 1" {
-    source $(gabrLocation)
+    source gabr.sh
     GABR_ENV=dev
     run gabr return1
     debug
@@ -121,7 +121,7 @@ return 1
 }
 
 @test "gabr crashes shell when env is prod" {
-    source $(gabrLocation)
+    source gabr.sh
     GABR_ENV=dev
     result="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
     GABR_ENV=debug
@@ -133,7 +133,7 @@ return 1
 }
 
 @test "gabr can change default functionality with GABR_DEFAULT / variable indirection" {
-    source $(gabrLocation)
+    source gabr.sh
     GABR_ENV=dev
     debug=()
     local normalOutput="$(gabr 2>&1)"
@@ -165,7 +165,7 @@ return 1
         return $?
     }
     local exitcode=0 # needs to be set to a variable in order to inherit Gabr's exitcode\
-    source $(gabrLocation)
+    source gabr.sh
     GABR_ENV=dev
     run gabr undefined;
     ! [ -v iamnotdefined ]
@@ -185,7 +185,7 @@ return 1
         difference ${@} 
     }
     local herestack=$(declare -F -f)
-    source $(gabrLocation)
+    source gabr.sh
     local stack="$(declare -F)"
     local -a result=($(
         gabr diffStack $(declare -F -f);
@@ -206,7 +206,7 @@ return 1
 function whatdidisay(){
     echo \"\${@}\"
 }" > ./whatdidisay.sh
-    source $(gabrLocation)
+    source gabr.sh
     local result="$(gabr whatdidisay ' jim ' " has long " " cheeks ")"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./whatdidisay.sh' RETURN
@@ -218,7 +218,7 @@ function whatdidisay(){
 function spectabular(){
     echo \"\${@}\"
 }" > ./spectabular.sh
-    source $(gabrLocation)
+    source gabr.sh
     local result="$(gabr spectabular "$(echo -e '\t')<tabs>$(echo -e '\t')" "<ta$(echo -e '\t')bs>")"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./spectabular.sh' RETURN
@@ -232,7 +232,7 @@ function spectabular(){
 function sophie(){
     echo Sophie
 }" > sophie/sophie.sh
-    source $(gabrLocation)
+    source gabr.sh
     local result="$(gabr sophie)"
     trap 'rm -rf sophie' RETURN
     [ "$result"  = "Sophie" ]
@@ -245,7 +245,7 @@ function whereru(){
     echo \${PWD}
 }
 " > whereru/whereru.sh
-    source $(gabrLocation)
+    source gabr.sh
     local localPWD=$(pwd)
     local result="$(gabr whereru)"
     echo failed-result="\"${result[@]: -8}\"" 1>&2
@@ -271,7 +271,7 @@ function bonito(){
     echo bonito >&2
     echo \"de wever\"
 }" > .jimtest/bonito
-    source $(gabrLocation)
+    source gabr.sh
     local result="$(gabr $(gabr .jimtest jim))"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -rf .jimtest' RETURN

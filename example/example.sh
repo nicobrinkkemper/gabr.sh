@@ -4,7 +4,6 @@ if [ -z "${stack:-}" ]; then
     local pathJuggle=${fn##*/}
     local filename=${pathJuggle%%.*}
 fi
-echo @=${@}
 if [[ $# -eq 0 ]]; then
     set -- usage # This is how usage is forced when no arguments given
     # sidenote: running a file is legit the same thing as running a function

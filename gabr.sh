@@ -118,8 +118,7 @@ EOF
             echo "# -----------" >&2
             for val in ${debug[@]}
             do
-                local valArr=${val:-}[@]
-                if [ -n "${!valArr:-}" ]; then
+                if [ -n "$(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" ]; then
                     printf "# "%s'\n' "$(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" >&2
                 fi
             done
