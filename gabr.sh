@@ -7,11 +7,7 @@
 # This file acts as a function when called as a file.
 #
 # @example
-#   $ gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
-#     --file       A full path to a file
-#     --derive     A filename without extension
-#     1..N         Performs various checks to derive flags
-#                  Flags are optional and not needed in most cases
+#   $ gabr [file] function [arguments] -- A function to call other functions  
 #
 # @arg $1 string A file, directory or function
 # @arg $@ any Will be shifted through until a valid function is found
@@ -27,7 +23,7 @@ if [ -n "${debug:-}" ] || [[ ${GABR_ENV:-} = 'debug' ]]; then
     echo "# BASH_SOURCE=${BASH_SOURCE}"
 fi
 # we can source linux version if available (has minor benefits like file checking)
-if [ ${BASH_VERSION:0:1} -ge 5 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
+if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
     . "${BASH_SOURCE%\.sh*}.linux$([ "${BASH_SOURCE}" != "${BASH_SOURCE%\.sh*}" ] && echo .sh)"
 else
 function gabr() {  # A function to run other functions 
