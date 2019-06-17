@@ -48,7 +48,7 @@ function gabr() {  # A function to run other functions
     fi
     # prod mode
     if [[ $env = prod ]]; then
-        set -eEuo pipefail # this will crash terminal on error
+        set -e # this will crash terminal on error
     fi
     # usage
     if ! [[ -v usage ]]; then
@@ -68,12 +68,8 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     # arguments
 ( # @enter subshell
-    # dev mode
-    if [[ $env = dev ]]; then
-        set -eEuo pipefail
-    fi
-    # all modes
     if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
+        set -eEuo pipefail
         local IFS=$'\n\t'
     fi
     # usage
@@ -87,10 +83,6 @@ EOF
         function usage() {
             echo $usage >&2
         }
-    fi
-    # debug mode
-    if [[ $env = debug ]]; then
-        set -eExuo pipefail
     fi
     # helpers
     _isFn(){    [[ $(type -t ${fn}) = function ]]; }
@@ -114,13 +106,17 @@ EOF
         if [ "${fn::1}" = '-' ]; then
             break
         elif _isFn; then
+            if [[ $env = debug ]]; then set -x; fi
             cd $dir
             dir=.
             ${fn} ${@:-};
+            if [[ $env = debug ]]; then set +x; fi
             break
         elif _isFile; then # allow files in dir
             _setFile
+            if [[ $env = debug ]]; then set -x; fi
             . $file
+            if [[ $env = debug ]]; then set +x; fi
             _isFn && set -- $fn ${@:-} && continue
             [ $# -eq 0 ] && break # Allow sourcing files without calling a function
         elif _isDir; then # allow directory
@@ -138,6 +134,9 @@ EOF
 }
 fi
 if [ "$0" = "$BASH_SOURCE" ]; then
-    declare IFS=$'\n\t'
+    if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
+        set -eEuo pipefail
+        declare IFS=$'\n\t'
+    fi
     gabr ${*}
 fi

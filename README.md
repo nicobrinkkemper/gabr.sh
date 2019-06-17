@@ -26,58 +26,6 @@ Let's illustrate that with a flowchart.
 
 
 ## Variables
-
-### GABR_ENV
-`GABR_ENV` can be used to influence `IFS` and the `set` builtin.
-By default, it runs very strict. This is a good practice because it minimizes bugs.
-
-```shell
-$ export GABR_ENV=dev
-```
-> Will exit `gabr`'s subshell on errors. (`set -eEuo pipefail`) This is the default behavior.
->
-> With this setting, `gabr` will not exit (crash) it's own shell on errors. The exitcode
-> will be available as `$?`
-
-```shell
-$ export GABR_ENV=debug
-```
-> Same as `dev`, but will enter debug-mode. (`set -x`)
-
-```shell
-$ export GABR_ENV=prod
-```
-> Same as `dev`, but `set -eEuo pipefail` will be set in main shell instead.
->
-> With this setting, `gabr` will exit (crash) it's own shell on errors. This means that
-> a terminal could close on errors.
-
-```shell
-$ export GABR_ENV=none # or any other value
-```
-> Opts-out of `set` and `IFS` rules.
-
-### GABR_ROOT
-```shell
-$ export GABR_ROOT=$PWD # fix root to current PWD (even after cd'ing)
-```
-> This allows for a utility directory that is always available
-
-### GABR_DEFAULT  
-```shell
-$ export GABR_DEFAULT=help # usage becomes help
-```
-> A default function will be generated but can be overwritten or inherited.
-> See the [Functions](#Functions)
-
-### IFS
-`gabr` defines `IFS` insides it's subshell.
-By default it's set to newlines and tabs. (`local IFS=$'\n\t'`)
-Functions called with `gabr` will share this `IFS` value.
-This is a good practice, because it allows for arguments with spaces in it.
-
-If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
-
 ### Local variables
 Gabr defines the following local variables. These will be available in files sourced by Gabr. Variables that already exist will be inherited.
 
@@ -95,16 +43,64 @@ Gabr defines the following local variables. These will be available in files sou
 | ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
-## Buildtins
-### Set 
-`gabr` uses `set -eEuo pipefail`. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information,
-but it boils down to this:
+### GABR_ENV / env
+A global variable called `GABR_ENV` may be used to influence the value of `env`. `env`
+controls the strictness with which `gabr` runs. Files and functions ran by `gabr` will
+inherit this "strict-mode".
+
+There are three valid values for `GABR_ENV`: `dev`, `prod` and `debug`.
+Setting `GABR_ENV` to any other value will opt-out of strict-mode.
+
+The behavior of the set builtin is complex. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information, but here is a reminder:
  - **-e** Exit immediately on errors
  - **-E** Inherit traps
+ - **(-x)** Enter debug mode
  - **-u** Error on unset variables
  - **-o pipefail** the return value is that of the last error
 
-If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
+#### default (dev)
+When running as a file, the following snippet is set before the `gabr` function is called:
+```bash
+set -eEuo pipefail
+declare IFS=$'\n\t'
+```
+
+When running as a sourced function. `gabr` will postpone this snippet
+until the subshell is entered. This will ensure the main shell won't
+close (crash), but it will still fail early.
+
+#### prod
+Prod behaves similar to the default, with the addition of `set -e` inside
+the main shell. When running as a file (`npm link`), this doesn't have any effect. 
+When running as a sourced function, errors will close (crash) the shell.
+```shell
+$ export GABR_ENV=prod
+```
+
+#### debug
+Debug is similar to default, with the addition of `set -x` before and `set +x` after every
+file source and function call.
+```shell
+$ export GABR_ENV=debug
+```
+
+### GABR_ROOT / root
+A global variable called `GABR_ROOT` may be used to influence the value of `root`. 
+`root` is used as a fall-back directory. The fall-back directory will be consulted
+when no other options are available.
+
+```shell
+$ export GABR_ROOT=$(git rev-parse --show-toplevel)
+```
+> This will make files at the root of a git repository available from anywhere
+
+### GABR_DEFAULT / default
+A global variable called `GABR_DEFAULT` may be used to influence the value of `default`. 
+`default` may be used to change the namespace of the fall-back function.
+```shell
+$ export GABR_DEFAULT=help
+```
+> This will change `usage` to `help`. Also see [functions](#Functions)
 
 ## Functions
 
@@ -121,9 +117,10 @@ function usage() {
 
 ### function $default ()
 
-The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates a function and variable for this name. If a function or variable already exist with this name, these will be used instead. The generated function looks like this:
+The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates a function and variable for this name. If a function or variable already exist with this name, these will be used instead. The generated function boils down to the following snippet:
 
 ```bash
+$default=usage
 function $default() {
     echo ${!default} >&2
 }
