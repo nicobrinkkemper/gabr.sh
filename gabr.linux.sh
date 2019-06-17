@@ -15,7 +15,7 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
+if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ]
 then
 function gabr() {  # A function to run other functions 
     local FUNCNEST=50
@@ -73,7 +73,6 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
         local IFS=$'\n\t'
-        trap '(exit $?)' ERR SIGINT
     fi
     # usage
     if ! [[ $default = usage  ]] && ! [[ $(type -t $default) = function ]]; then

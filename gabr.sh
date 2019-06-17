@@ -16,7 +16,7 @@
 # @exitcode >0 On failure
 #
 # we can source linux version if available (has minor benefits like file checking)
-if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
+if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
     . "${BASH_SOURCE%\.sh*}.linux$([ "${BASH_SOURCE}" != "${BASH_SOURCE%\.sh*}" ] && echo .sh)"
 else
 function gabr() {  # A function to run other functions 
@@ -50,7 +50,7 @@ function gabr() {  # A function to run other functions
     fi
     # prod mode
     if [ "$env" = 'prod' ]; then
-        set -e # this will crash terminal on error
+        set -eEuo pipefail # this will crash terminal on error
     fi
     # usage
     if [ -z "${usage:-}" ]; then
@@ -70,11 +70,10 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
 ( # @enter subshell
     if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
-        set -euo pipefail
+        set -eEuo pipefail
     fi
     if [ "$env" = 'dev' ] || [ "$env" = 'prod' ] || [ "$env" = 'debug' ]; then
         local IFS=$'\n\t'
-        trap '(exit $?)' ERR SIGINT
     fi
     # usage
     if ! [ "$default" = 'usage'  ] && ! [ "$(type -t $default)" = 'function' ]; then
