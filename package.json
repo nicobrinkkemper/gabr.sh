@@ -1,6 +1,6 @@
 {
   "name": "gabr.sh",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Make Bash functions accessible with gabr.sh",
   "main": "gabr.sh",
   "scripts": {
