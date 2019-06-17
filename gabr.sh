@@ -69,13 +69,12 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
         fi
     fi
 ( # @enter subshell
-    # dev/debug mode
     if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
-        set -eEuo pipefail
+        set -euo pipefail
     fi
-    # all modes
     if [ "$env" = 'dev' ] || [ "$env" = 'prod' ] || [ "$env" = 'debug' ]; then
         local IFS=$'\n\t'
+        trap '(exit $?)' ERR SIGINT
     fi
     # usage
     if ! [ "$default" = 'usage'  ] && ! [ "$(type -t $default)" = 'function' ]; then
@@ -140,7 +139,7 @@ EOF
 fi
 if [ "$0" = "$BASH_SOURCE" ]; then
     if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
-        set -eEuo pipefail
+        set -euo pipefail
         declare IFS=$'\n\t'
     fi
     gabr ${*}
