@@ -78,12 +78,12 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     # usage
     if ! [ "$default" = 'usage'  ] && ! [ "$(type -t $default)" = 'function' ]; then
         source /dev/stdin << EOF
-function $default() {
+$default() {
     echo '${!default}' 2>&2
 }
 EOF
     elif ! [ "$(type -t usage)" = 'function' ]; then
-        function usage() {
+        usage() {
             echo $usage >&2
         }
     fi
