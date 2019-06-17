@@ -64,7 +64,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
             printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may only contain [:alnum:], [:upper:], [:lower:]" 1>&2
             return 1
         fi
-        if ! declare -p ${default} 2>/dev/null; then
+        if [ -z "$(declare -p ${default} 2>/dev/null)" ]; then
             local $default="$usage"
         fi
     fi
