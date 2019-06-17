@@ -90,7 +90,7 @@ but it boils down to this:
 If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
 
 ### Trap 
-Gabr defines one trap to unsure that a function really fails on errors. (`trap '(exit $?); return $?' ERR SIGINT`) This makes failing early on errors 100% consistent in tests.
+Gabr defines one trap to unsure that a function really fails early on errors. (`trap '(exit $?); return $?' ERR SIGINT`) This makes failing early on errors consistent. It also allows to exit any process with `ctrl+c`
 
 If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
 
