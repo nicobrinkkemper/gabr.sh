@@ -81,6 +81,18 @@ function deleteTag() {
     git push origin :refs/tags/$1
 }
 
+# @description Rename a tag
+# @example
+#       gabr example git deleteTag some-feature
+# @arg $1 old version
+# @arg $2 new version
+function renameTag() {
+    git tag $1 $2
+    git tag -d $1
+    git push origin :refs/tags/$1
+    git push --tags
+}
+
 if [ -z "${branch:-}" ]; then
     declare branch="$(currentBranch)"
 fi

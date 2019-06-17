@@ -15,7 +15,7 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]
+if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ]
 then
 function gabr() {  # A function to run other functions 
     local FUNCNEST=50
@@ -48,7 +48,7 @@ function gabr() {  # A function to run other functions
     fi
     # prod mode
     if [[ $env = prod ]]; then
-        set -e # this will crash terminal on error
+        set -eEuo pipefail # this will crash terminal on error
     fi
     # usage
     if ! [[ -v usage ]]; then
@@ -68,8 +68,10 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     # arguments
 ( # @enter subshell
-    if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
+    if [[ $env = dev ]] || [[ $env = debug ]]; then
         set -eEuo pipefail
+    fi
+    if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
         local IFS=$'\n\t'
     fi
     # usage

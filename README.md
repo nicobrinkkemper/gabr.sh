@@ -109,7 +109,6 @@ $ export GABR_DEFAULT=help
 ```
 > This will change `usage` to `help`. Also see [functions](#Functions)
 
-<<<<<<< HEAD
 ## Functions
 
 ### function usage ()
