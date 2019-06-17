@@ -2,19 +2,26 @@
 [![npm package](https://img.shields.io/npm/v/gabr.sh.svg)](https://www.npmjs.com/package/gabr.sh)
 [![Continuous integration status for Linux and macOS](https://travis-ci.org/nicobrinkkemper/gabr.sh.svg?branch=master&label=travis%20build)](https://travis-ci.org/bats-core/bats-core)
 ## Installation
+### Try out as portable file
 ```shell
 $ wget git@github.com:nicobrinkkemper/gabr.sh.git
 $ source ./gabr.sh
 ```
-> 
 
-### Install as node_module
+### Install with git
 ```shell
-$ npm install --save-dev gabr.sh
+$ git clone https://github.com/nicobrinkkemper/gabr.sh.git gabr
+$ cd gabr
 $ npm link
 ```
-> When installed like this, `gabr` will run as a file.
+> When installed with `npm link`, `gabr` will run as a file.
 > If you want to run `gabr` as a local function, try `source $(which gabr)`
+
+### Install with npm
+```shell
+$ npm install --save-dev gabr
+$ npm link
+```
 
 ## What is gabr.sh
 Gabr is a Bash function designed to call other Bash functions.
