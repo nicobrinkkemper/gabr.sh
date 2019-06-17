@@ -2,7 +2,11 @@
 # @file git.sh
 #
 # @brief  Git.sh contains some one-off git functions. To serve as example.
-
+if [[ $# -eq 0 ]]; then
+    set  -- usage
+else
+    dir=$(git rev-parse --show-toplevel) # functions target root directory
+fi
 # @description Gets the current branch
 # @example
 #   $ gabr example git currentBranch
@@ -59,7 +63,7 @@ function deleteBranch() {
     local branch=${1:-$branch}
     local checkout=${2:-master}
     local remote=${3:-remote}
-    if [[ ${checkout} = ${branch} ]]; then
+    if [ "${checkout}" = "${branch}" ]; then
         echo "Checkout branch may not be the same as deleted branch" 1>&2
         return 1
     fi
@@ -77,9 +81,9 @@ function deleteTag() {
     git push origin :refs/tags/$1
 }
 
-if ! [[ -v branch ]]; then
-    declare branch=$(currentBranch)
+if [ -z "${branch:-}" ]; then
+    declare branch="$(currentBranch)"
 fi
-if ! [[ -v remote ]]; then
-    declare remote=$(git remote)
+if [ -z "${remote:-}" ]; then
+    declare remote="$(git remote)"
 fi

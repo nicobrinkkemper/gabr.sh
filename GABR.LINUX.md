@@ -15,11 +15,7 @@ This file acts as a function when called as a file.
 ### Example
 
 ```bash
-$ gabr [--file] [--derive] [file] function [arguments] -- A function to call other functions
-  --file       A full path to a file
-  --derive     A filename without extension
-  1..N         Performs various checks to derive flags
-               Flags are optional and not needed in most cases
+$ gabr [file] function [arguments] -- A function to call other functions  
 ```
 
 ### Arguments

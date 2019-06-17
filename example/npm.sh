@@ -1,3 +1,11 @@
+#!/usr/bin/env bash
+
+if [[ $# -eq 0 ]]; then
+    set  -- usage
+else
+    dir=$(git rev-parse --show-toplevel) # functions target root directory
+fi
+
 function release() { # [ message ] - Release with a message
     git add . || 'Nothing to add'
     git commit -m ${1:-"New release will bump ${version:-}"} || 'Nothing to commit'
@@ -19,12 +27,12 @@ Usage: deprecate [version] [message] -- e.g. deprecate 0.0.2 no long need it
     npm deprecate ${name}@${version} ${reason:-"${version} is no longer supported"}
 }
 
-if ! [[ $(which node) ]]; then
+if [ -z "$(which node)" ]; then
     echo "Warning: node is not available" 1>&2
 fi
-if ! [[ -v version ]]; then
-    declare version=$(node -p -e "require('../package.json').version")
+if [ -z "${version:-}" ]; then
+    declare version=$(node -p -e "require('./package.json').version")
 fi
-if ! [[ -v name ]]; then
-    declare name=$(node -p -e "require('../package.json').name")
+if [ -z "${name:-}" ]; then
+    declare name=$(node -p -e "require('./package.json').name")
 fi

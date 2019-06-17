@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+if [ $# -eq 0 ]; then
+    set -- ${default:-usage}
+fi
+
 function badarray() { # -- e.g. gabr example badarray; echo $?
     mapfile foo < <(true; echo foo)
     echo ${foo[-1]:-} >&2 # foo
@@ -12,6 +17,7 @@ function die () { # -- e.g. gabr example crash die; echo $?
 
 function notfound () { # -- e.g. gabr example crash notfound; echo $?
     thiscommandisnotfound
+    echo "Should stop at first hick-up, you shouldn't see this" 1>&2
 }
 
 if ! [[ -v args ]]; then
