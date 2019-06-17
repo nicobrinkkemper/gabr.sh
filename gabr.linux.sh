@@ -75,7 +75,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     # all modes
     if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
         local IFS=$'\n\t'
-        trap '(exit $?); return $?' ERR SIGINT
+        trap 'return $?' ERR SIGINT
     fi
     # usage
     if ! [[ $default = usage  ]] && ! [[ $(type -t $default) = function ]]; then

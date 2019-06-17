@@ -26,49 +26,37 @@ Let's illustrate that with a flowchart.
 
 
 ## Variables
-### IFS
-`gabr` defines `IFS` insides it's subshell. It's set to newlines and tabs. Functions
-called with `gabr` will share this `IFS` value.
-```
-local IFS=$'\n\t'
-```
-> This is a good practice, because it allows for arguments with spaces in it
 
 ### GABR_ENV
-If defined, it can turn some opinionated features on or off.
+`GABR_ENV` can be used to influence `IFS`, `set` builtin and `trap`s.
+By default, it runs very strict. This is a good practice because it minimizes bugs.
+
 ```shell
 $ export GABR_ENV=dev
 ```
-> Will exit subshell on errors (non-zero return/unbound variables)
+> Will exit `gabr`'s subshell on errors. (`set -eEuo pipefail`) This is the default behavior.
+>
+> With this setting, `gabr` will not exit (crash) it's own shell on errors. The exitcode
+> will be available as `$?`
+
 ```shell
 $ export GABR_ENV=debug
 ```
-> `set -eExuo pipefail` at main level
+> Same as `dev`, but will enter debug-mode. (`set -x`)
+
 ```shell
 $ export GABR_ENV=prod
 ```
-> `set -eExuo pipefail` at main level
+> Same as `dev`, but `set -eEuo pipefail` will be set in main shell instead.
+>
+> With this setting, `gabr` will exit (crash) it's own shell on errors. This means that
+a terminal could close on errors.
+
 ```shell
 $ export GABR_ENV=none
 ```
-> Any other value than `dev`, `prod`, or `debug` opts-out of above rules
-
-
-### Set builtin
-`gabr` uses `set -eEuo pipefail`. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information,
-but it boils down to this:
- - **-e** Exit immediately on errors
- - **-E** Inherit traps
- - **-u** Error on unset variables
- - **-o pipefail** the return value is that of the last error
-
-But that is not all. **-E** gave the hint away maybe. Gabr defines one trap, and
-it looks like this:
-
-```
-trap '(exit $?)' ERR SIGINT
-```
-The trap will ensure that a function really fails. However, `gabr` does not intend to catch errors. If `GABR_ENV` is not dev, debug or prod, will opt-out of this behavior.
+> Any other value than `dev`, `prod`, or `debug` opts-out of above rules.
+> This also opts-out of setting a ERR SIGINT `trap` and setting `IFS`
 
 ### GABR_ROOT
 ```shell
@@ -81,14 +69,33 @@ $ export GABR_ROOT=$PWD # fix root to current PWD (even after cd'ing)
 $ export GABR_DEFAULT=help # usage becomes help
 ```
 > A default function will be generated but can be overwritten or inherited.
-> 
-> The default function will echo a variable with the same name. Which
-> can also be overwritten or inherited. This is done through variable indirection in Bash 4.3+
-> and `eval` in Bash 3.2+.
+> See the [Functions](#Functions)
 
-### Variables
-Gabr defines the following variables. These will be available in files sourced by Gabr.
-Variables that already exist will be inherited.
+### IFS
+`gabr` defines `IFS` insides it's subshell.
+By default it's set to newlines and tabs. (`local IFS=$'\n\t'`)
+Functions called with `gabr` will share this `IFS` value.
+This is a good practice, because it allows for arguments with spaces in it.
+To disable this behavior use `export GABR_ENV=none`
+
+## Buildtins
+### Set 
+`gabr` uses `set -eEuo pipefail`. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information,
+but it boils down to this:
+ - **-e** Exit immediately on errors
+ - **-E** Inherit traps
+ - **-u** Error on unset variables
+ - **-o pipefail** the return value is that of the last error
+
+If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
+
+### Trap 
+Gabr defines one trap to unsure that a function really fails on errors. (`trap '(exit $?); return $?' ERR SIGINT`) This makes failing early on errors 100% consistent in tests.
+
+If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
+
+### Local variables
+Gabr defines the following local variables. These will be available in files sourced by Gabr. Variables that already exist will be inherited.
 
 | variable     	| type  	| description                              	| default                                	| Note                                    	|
 |--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
@@ -104,28 +111,28 @@ Variables that already exist will be inherited.
 | ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
-## Flags
-
-Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
-
 ## Functions
 
-### Usage
-By default, this function will be called as a last-resort.
-```shell
+### function usage ()
+By default, this function will be called as a last-resort:
+```bash
 function usage() {
     echo $usage >&2
 }
 ```
 > Feel free to overwrite this function and/or variable
 
-The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates
-a function and variable for this name. If a function or variable already exist with this name, they will be used instead.
-```shell
-source /dev/stdin << EOF
+### function $default ()
+
+The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates a function and variable for this name. If a function or variable already exist with this name, these will be used instead. The generated function looks like this:
+
+```bash
 function $default() {
-    echo '${!default}' >&2
+    echo ${!default} >&2
 }
-EOF
 ```
 > The `!` introduces variable indirection. [Read more](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html)
+
+## Flags
+
+Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
