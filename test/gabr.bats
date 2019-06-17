@@ -61,7 +61,7 @@ function baa()(
     run gabr boo
     debug
     [ "$status" -eq 123 ] || [ "$status" -eq 1 ]
-    [ "$status" -eq 1 ] && [ ${BASH_VERSION:0:1} -lt 4 ] || [ ${BASH_VERSION:2:1} -lt 4 ] && skip # I'm sorry, update bash for this
+    [ "$status" -eq 1 ] && [ ${BASH_VERSION:0:1} -lt 4 ] && [ ${BASH_VERSION:2:1} -lt 4 ] && skip # I'm sorry, update bash for this
     run gabr baa
     debug
     [ "$status" -eq 123 ]
