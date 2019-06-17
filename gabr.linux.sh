@@ -48,7 +48,7 @@ function gabr() {  # A function to run other functions
     fi
     # prod mode
     if [[ $env = prod ]]; then
-        set -e # this will crash terminal on error
+        set -eEuo pipefail # this will crash terminal on error
     fi
     # usage
     if ! [[ -v usage ]]; then
@@ -68,7 +68,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     # arguments
 ( # @enter subshell
-    if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
+    if [[ $env = dev ]] || [[ $env = debug ]]; then
         set -eEuo pipefail
         local IFS=$'\n\t'
     fi
