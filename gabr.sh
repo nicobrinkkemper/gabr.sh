@@ -64,7 +64,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
             printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may only contain [:alnum:], [:upper:], [:lower:]" 1>&2
             return 1
         fi
-        if [ -z "$(declare -p ${default} 2>/dev/null)" ]; then
+        if ! declare -p ${default} 2>/dev/null; then
             local $default="$usage"
         fi
     fi
@@ -82,12 +82,12 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     if ! [ "$default" = 'usage'  ] && ! [ "$(type -t $default)" = 'function' ]; then
         source /dev/stdin << EOF
 function $default() {
-    echo '${!default}'
+    echo '${!default}' 2>&2
 }
 EOF
     elif ! [ "$(type -t usage)" = 'function' ]; then
         function usage() {
-            echo $usage
+            echo $usage >&2
         }
     fi
     # debug mode

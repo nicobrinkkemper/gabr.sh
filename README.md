@@ -87,21 +87,45 @@ $ export GABR_DEFAULT=help # usage becomes help
 > and `eval` in Bash 3.2+.
 
 ### Variables
-Gabr defines some useful variables. These will be available in files sourced by Gabr.
-If any of these already exist, they will be inherited.
+Gabr defines the following variables. These will be available in files sourced by Gabr.
+Variables that already exist will be inherited.
 
 | variable     	| type  	| description                              	| default                                	| Note                                    	|
 |--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
-| env          	|       	| The strictness of the function           	| dev                                    	|                                         	|
-| root         	|       	| The fallback directory                   	| $PWD                                   	|                                         	|
-| default      	|       	| Name of fallback function                	| usage                                  	|                                         	|
-| $default     	|       	| String printed by fallback function      	| $usage                                   	| Variable indirection/eval               	|
+| env          	|       	| The strictness of the function           	| dev                                    	| May be set by `GABR_ENV`     	            |
+| root         	|       	| The fallback directory                   	| $PWD                                   	| May be set by `GABR_ROOT`    	            |
+| default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_ENV`              	|
+| $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Usage](#Usage)                     	|
 | usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | fn           	|       	| The called function                      	| usage                                  	|                                         	|
-| file        	|       	| The sourced function                     	|                                         	|                                         	|
-| args         	| -a    	| The arguments (tail)                     	| ()                                     	| Also available as ${@}                 	|
-| dir          	|       	| The directory to run the function in     	| .                                      	|                                         	|
+| args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@}                    |
+| file        	|       	| The sourced file                       	|                                         	|                                         	|
+| dir          	|       	| The relative directory of the file     	| .                                      	| Wil be cd'd to before calling the function|
+| ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
+| fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
 ## Flags
 
 Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
+
+## Functions
+
+### Usage
+By default, this function will be called as a last-resort.
+```shell
+function usage() {
+    echo $usage >&2
+}
+```
+> Feel free to overwrite this function and/or variable
+
+The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates
+a function and variable for this name. If a function or variable already exist with this name, they will be used instead.
+```shell
+source /dev/stdin << EOF
+function $default() {
+    echo '${!default}' >&2
+}
+EOF
+```
+> The `!` introduces variable indirection. [Read more](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html)

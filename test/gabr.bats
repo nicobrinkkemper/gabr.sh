@@ -132,10 +132,9 @@ return 1
     [ $result = "dev_debug_" ]
 }
 
-@test "gabr can change default functionality with GABR_DEFAULT / variable indirection" {
+@test "gabr can change default functionality with GABR_DEFAULT/default" {
     source gabr.sh
     GABR_ENV=dev
-    debug=()
     local normalOutput="$(gabr 2>&1)"
     echo failed-normalOutput="\"${normalOutput}\"" 1>&2
     [ -n "$normalOutput" ]
@@ -157,6 +156,21 @@ return 1
     echo failed-helpFunctionOutput="\"${helpFunctionOutput}\"" 1>&2
     [ "$helpFunctionOutput" = "some-other-string" ]
 }
+
+@test "gabr can't be abused to execute malicious code through GABR_DEFAULT" {
+    source gabr.sh
+    GABR_ENV=dev
+    GABR_DEFAULT='hi; exit 133; ho'
+    declare warningOutput="$(gabr 2>&1)"
+    echo failed-warningOutput="\"${warningOutput}\"" 1>&2
+    ! [ "${warningOutput##*Warning\:}" = "${warningOutput}" ]
+    GABR_DEFAULT='hack'
+    declare hack="| echo hacked; eval exit 777; || echo hi && echo ho << exit 4"
+    declare hackOutput="$(gabr 2>&1)"
+    echo failed-hackOutput="\"${hackOutput}\"" 1>&2
+    [ "${hackOutput}" = "${hack}" ]
+}
+
 
 @test "gabr does not walk over a error" {
     function undefined(){
