@@ -3,19 +3,18 @@
 [![Continuous integration status for Linux and macOS](https://travis-ci.org/nicobrinkkemper/gabr.sh.svg?branch=master&label=travis%20build)](https://travis-ci.org/bats-core/bats-core)
 ## Installation
 ```shell
+$ wget git@github.com:nicobrinkkemper/gabr.sh.git
 $ source ./gabr.sh
 ```
-> Grab the files however you want
+> 
 
 ### Install as node_module
 ```shell
 $ npm install --save-dev gabr.sh
 $ npm link
-$ source $(which gabr)
 ```
-> The source step will give the `gabr` function access to local variables. Which is
-> used in some of the examples in [/example](./example).
-> When running as a file instead, remember to `export` the variables.
+> When installed like this, `gabr` will run as a file.
+> If you want to run `gabr` as a local function, try `source $(which gabr)`
 
 ## What is gabr.sh
 Gabr is a Bash function designed to call other Bash functions.
@@ -27,28 +26,49 @@ Let's illustrate that with a flowchart.
 
 
 ## Variables
+### IFS
+`gabr` defines `IFS` insides it's subshell. It's set to newlines and tabs. Functions
+called with `gabr` will share this `IFS` value.
+```
+local IFS=$'\n\t'
+```
+> This is a good practice, because it allows for arguments with spaces in it
 
 ### GABR_ENV
+If defined, it can turn some opinionated features on or off.
 ```shell
 $ export GABR_ENV=dev
 ```
-> `set -Euo pipefail` at subshell level *(default)*
->
 > Will exit subshell on errors (non-zero return/unbound variables)
 ```shell
 $ export GABR_ENV=debug
 ```
-> Print debug information
+> `set -eExuo pipefail` at main level
 ```shell
 $ export GABR_ENV=prod
 ```
-> `set -euo pipefail` at shell level
-> 
-> Will exit both shell and subshell on errors
+> `set -eExuo pipefail` at main level
 ```shell
 $ export GABR_ENV=none
 ```
 > Any other value than `dev`, `prod`, or `debug` opts-out of above rules
+
+
+### Set builtin
+`gabr` uses `set -eEuo pipefail`. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information,
+but it boils down to this:
+ - **-e** Exit immediately on errors
+ - **-E** Inherit traps
+ - **-u** Error on unset variables
+ - **-o pipefail** the return value is that of the last error
+
+But that is not all. **-E** gave the hint away maybe. Gabr defines one trap, and
+it looks like this:
+
+```
+trap '(exit $?)' ERR SIGINT
+```
+The trap will ensure that a function really fails. However, `gabr` does not intend to catch errors. If `GABR_ENV` is not dev, debug or prod, will opt-out of this behavior.
 
 ### GABR_ROOT
 ```shell
@@ -75,40 +95,13 @@ If any of these already exist, they will be inherited.
 | env          	|       	| The strictness of the function           	| dev                                    	|                                         	|
 | root         	|       	| The fallback directory                   	| $PWD                                   	|                                         	|
 | default      	|       	| Name of fallback function                	| usage                                  	|                                         	|
-| $default     	|       	| String printed by fallback function      	| "Usage: gabr [file] function..."       	| created through variable indirection    	|
-| files        	| -A    	| All included files                       	| ()                	| BASH 4.3+                               	|
-| file         	|       	| Recently imported file                   	|                                        	|                                         	|
-| filename     	|       	| Recently imported file without extension 	|                                        	|                                         	|
+| $default     	|       	| String printed by fallback function      	| $usage                                   	| Variable indirection/eval               	|
+| usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | fn           	|       	| The called function                      	| usage                                  	|                                         	|
-| args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@} in sourced files 	|
+| file        	|       	| The sourced function                     	|                                         	|                                         	|
+| args         	| -a    	| The arguments (tail)                     	| ()                                     	| Also available as ${@}                 	|
 | dir          	|       	| The directory to run the function in     	| .                                      	|                                         	|
-
-### Miscellaneous Variables
-These values wil be available in sourced files.
-
-| variable     	| type  	| description                              	| default                                	| Note                                    	|
-|--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
-| prevFn       	|       	| The previous value of fn                 	|                                        	|                                         	|
-| error        	| -a    	| The error messages                       	| ()                                     	| Will be printed on internal errors      	|
-| exitcode     	|       	| The error exitcode                       	|                                        	| Set on ERR SIGINT trap                  	|
-| wrapInfo     	|       	| `printf` helper for debug messages       	| "# "%s'\n'                             	| # some message                          	|
-| wrapErr      	|       	| `printf` helper for error messages       	| $'\033[0;91m'"Warning: "%s$'\033[0m\n' 	| Warning: light red color                	|
-| primaryFn    	|       	| The first argument                       	| $1                                     	| Not used internally                      	|
-| pwd          	|       	| Initial directory                        	|                                        	| Not used internally                     	|
-| funcname     	| -a    	| Initial previously called functions      	| ${FUNCNAME[@]}                         	| Not used internally                     	|
-| stack        	|       	| Initial available functions              	| declare -F                             	| Not used internally                     	|
 
 ## Flags
 
-Gabr does not require any flags. The flags will be automatically assigned
-based on user input. Only one argument is needed to call a function if files and directories are named a like. Nonetheless, they can still provide information.
-
-#### --file
-A full path to a file. This flag will be derived if a argument is a valid
-path to a file. If the argument is a valid function name after source, it will
-be called.
-
-#### --derive
-A name of a file without extension. This flag will be derived if a file
-exists. If the argument is a valid function name after source, it will
-be called.
+Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
