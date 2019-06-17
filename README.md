@@ -137,25 +137,3 @@ function $default() {
 ## Flags
 
 Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
-
-## Functions
-
-### Usage
-By default, this function will be called as a last-resort.
-```shell
-function usage() {
-    echo $usage >&2
-}
-```
-> Feel free to overwrite this function and/or variable
-
-The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates
-a function and variable for this name. If a function or variable already exist with this name, they will be used instead.
-```shell
-source /dev/stdin << EOF
-function $default() {
-    echo '${!default}' >&2
-}
-EOF
-```
-> The `!` introduces variable indirection. [Read more](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html)
