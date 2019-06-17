@@ -28,7 +28,7 @@ Let's illustrate that with a flowchart.
 ## Variables
 
 ### GABR_ENV
-`GABR_ENV` can be used to influence `IFS`, `set` builtin and `trap`s.
+`GABR_ENV` can be used to influence `IFS` and the `set` builtin.
 By default, it runs very strict. This is a good practice because it minimizes bugs.
 
 ```shell
@@ -50,13 +50,12 @@ $ export GABR_ENV=prod
 > Same as `dev`, but `set -eEuo pipefail` will be set in main shell instead.
 >
 > With this setting, `gabr` will exit (crash) it's own shell on errors. This means that
-a terminal could close on errors.
+> a terminal could close on errors.
 
 ```shell
-$ export GABR_ENV=none
+$ export GABR_ENV=none # or any other value
 ```
-> Any other value than `dev`, `prod`, or `debug` opts-out of above rules.
-> This also opts-out of setting a ERR SIGINT `trap` and setting `IFS`
+> Opts-out of `set` and `IFS` rules.
 
 ### GABR_ROOT
 ```shell
@@ -64,7 +63,7 @@ $ export GABR_ROOT=$PWD # fix root to current PWD (even after cd'ing)
 ```
 > This allows for a utility directory that is always available
 
-### GABR_DEFAULT
+### GABR_DEFAULT  
 ```shell
 $ export GABR_DEFAULT=help # usage becomes help
 ```
@@ -76,21 +75,6 @@ $ export GABR_DEFAULT=help # usage becomes help
 By default it's set to newlines and tabs. (`local IFS=$'\n\t'`)
 Functions called with `gabr` will share this `IFS` value.
 This is a good practice, because it allows for arguments with spaces in it.
-To disable this behavior use `export GABR_ENV=none`
-
-## Buildtins
-### Set 
-`gabr` uses `set -eEuo pipefail`. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information,
-but it boils down to this:
- - **-e** Exit immediately on errors
- - **-E** Inherit traps
- - **-u** Error on unset variables
- - **-o pipefail** the return value is that of the last error
-
-If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
-
-### Trap 
-Gabr defines one trap to unsure that a function really fails early on errors. (`trap '(exit $?); return $?' ERR SIGINT`) This makes failing early on errors consistent. It also allows to exit any process with `ctrl+c`
 
 If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
 
@@ -111,16 +95,29 @@ Gabr defines the following local variables. These will be available in files sou
 | ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
+## Buildtins
+### Set 
+`gabr` uses `set -eEuo pipefail`. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information,
+but it boils down to this:
+ - **-e** Exit immediately on errors
+ - **-E** Inherit traps
+ - **-u** Error on unset variables
+ - **-o pipefail** the return value is that of the last error
+
+If `GABR_ENV` is not `dev`, `debug` or `prod`, `gabr` will opt-out of this behavior.
+
 ## Functions
 
 ### function usage ()
 By default, this function will be called as a last-resort:
 ```bash
+local usage="gabr [directory | file] function [arguments] -- A function to call other functions."
 function usage() {
     echo $usage >&2
 }
 ```
-> Feel free to overwrite this function and/or variable
+> Feel free to overwrite this function and/or variable to extend
+> usage behavior
 
 ### function $default ()
 
