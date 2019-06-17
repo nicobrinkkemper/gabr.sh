@@ -69,7 +69,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     # arguments
 ( # @enter subshell
     if [[ $env = dev ]] || [[ $env = debug ]]; then
-        set -eEuo pipefail
+        set -e
         local IFS=$'\n\t'
     fi
     # usage
