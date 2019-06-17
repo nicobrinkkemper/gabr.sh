@@ -15,27 +15,23 @@
 # @exitcode 0  If successfull
 # @exitcode >0 On failure
 #
-if [ -n "${debug:-}" ] || [[ ${GABR_ENV:-} = 'debug' ]]; then
-    if [ -n "${debug:-}" ]; then
-        echo "# debug=(${debug[*]})"
-    fi
-    echo "# GABR_ENV=${GABR_ENV:-${env:-}}"
-    echo "# BASH_SOURCE=${BASH_SOURCE}"
-fi
 # we can source linux version if available (has minor benefits like file checking)
 if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
     . "${BASH_SOURCE%\.sh*}.linux$([ "${BASH_SOURCE}" != "${BASH_SOURCE%\.sh*}" ] && echo .sh)"
 else
 function gabr() {  # A function to run other functions 
-    FUNCNEST=50
+    local FUNCNEST=50
+    if [ -z "${fullCommand:-}" ]; then
+        local fullCommand="$FUNCNAME ${@}"
+    fi
     if [ -z "${fn:-}" ]; then
         local fn
     fi
+    if [ -z "${file:-}" ]; then
+        local file
+    fi
     if [ -z "${args:-}" ]; then
         local -a args=()
-    fi
-    if [ -z "${debug[@]:-}" ]; then
-        local -a debug=()
     fi
     if [ -z "${ext:-}" ]; then
         local ext=".sh"
@@ -44,13 +40,13 @@ function gabr() {  # A function to run other functions
         local dir=.
     fi
     if [ -z "${env:-}" ]; then
-        local env=dev
+        local env=${GABR_ENV:-dev}
     fi
     if [ -z "${default:-}" ]; then
-        local default=usage
+        local default=${GABR_DEFAULT:-usage} # By default a function called 'usage' prints a variable called 'usage' through variable indirection
     fi
     if [ -z "${root:-}" ]; then
-        local root=$PWD
+        local root=${GABR_ENV:-dev}
     fi
     # Set from globals
     if [ -n "${GABR_ROOT:-}" ]; then
@@ -64,11 +60,7 @@ function gabr() {  # A function to run other functions
     fi
     # prod mode
     if [ "$env" = 'prod' ]; then
-        set -euo pipefail # this will crash terminal on error
-    fi
-    # debug mode
-    if [ "$env" = 'debug' ] && [ -z "${debug:-}" ]; then
-        debug=(fn args dir filename)
+        set -eEuo pipefail # this will crash terminal on error
     fi
     # usage
     if [ -z "${usage:-}" ]; then
@@ -76,10 +68,9 @@ function gabr() {  # A function to run other functions
 ${FUNCNAME} [directory | file] function [arguments] -- A function to call other functions.
 "
     fi
+    # customize usage
     if ! [ "$default" = 'usage' ]; then
-        # portable variable indirection
-        default="$(echo "${default}" | tr -dc "[:alnum:]" | tr "[:upper:]" "[:lower:]")" # should be save for eval, unless you're a wizard
-        if [ -z "${default:-}" ]; then
+        if [ -z "${default:-}" ] || ! [ "$default" = "$(echo "${default}" | tr -dc "[:alnum:]" | tr "[:upper:]" "[:lower:]")" ]; then
             printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may only contain [:alnum:], [:upper:], [:lower:]" 1>&2
             return 1
         fi
@@ -87,68 +78,68 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
             local $default="$usage"
         fi
     fi
-    # arguments
-    if [ "$#" -eq 0 ]; then
-        if ! [ "${#args[@]}" -eq 0 ]; then
-            set -- ${args[@]:-}
-        else
-            set -- $default
-        fi
-    fi
 ( # @enter subshell
-    local IFS=$'\n\t'
-    if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
+    # dev mode
+    if [ "$env" = 'dev' ]; then
         set -eEuo pipefail
     fi
-    trap '(exit $?); return $?' ERR SIGINT
+    # all modes
+    if [ "$env" = 'dev' ] || [ "$env" = 'prod' ] || [ "$env" = 'debug' ]; then
+        local IFS=$'\n\t'
+        trap '(exit $?); return $?' ERR SIGINT
+    fi
+    # usage
     if ! [ "$default" = 'usage'  ] && ! [ "$(type -t $default)" = 'function' ]; then
         source /dev/stdin << EOF
 function $default() {
     echo '${!default}'
 }
 EOF
-    elif ! [[ $(type -t usage) = function ]]; then
+    elif ! [ "$(type -t usage)" = 'function' ]; then
         function usage() {
             echo $usage
         }
     fi
-    while ! [ "$#" -eq 0 ];
-    do
-        if [ -n "${debug:-}" ]; then
-            echo "# -----------" >&2
-            for val in ${debug[@]}
-            do
-                if [ -n "$(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" ]; then
-                    printf "# "%s'\n' "$(declare -p $val 2>/dev/null | cut -d' ' -f 3-)" >&2
-                fi
-            done
+    # debug mode
+    if [ "$env" = 'debug' ]; then
+        set -eExuo pipefail
+    fi
+    # helpers
+    _isFn(){    [ "$(type -t ${fn})" = 'function' ]; }
+    _isFile(){  [ -f "${dir}/${fn}${ext}" ] || [ -f "${dir}/${fn}" ]; }
+    _isDir(){   [ -d "${dir}/${fn}" ] || [ "${dir:0:${#root}}" = "$root" ]; }
+    _setFile(){ file=$([ -f "${dir}/${fn}${ext}" ] && echo "${dir}/${fn}${ext}" || echo "${dir}/${fn}"); }
+    _setDir(){  dir=$([ -d "${dir}/${fn}" ] && echo "${dir}/${fn}" || echo "$root"); }
+    # begin processing arguments
+    if [ $# -eq 0 ]; then
+        if ! [ ${#args[@]} -eq 0 ]; then
+            set -- ${args[@]:-}
+        else
+            set -- $default
         fi
+    fi
+    while ! [ $# -eq 0 ];
+    do
         fn=${1}
         shift
         args=(${@:-})
         if [ "${fn::1}" = '-' ]; then
             break
-        elif [ "$(type -t ${fn})" = 'function' ]; then
-            if [ -n "${debug:-}" ]; then
-                printf "# "%s'\n' "Calling ${fn}" >&2
-            fi
+        elif _isFn; then
             cd $dir
             dir=.
             ${fn} ${@:-};
             break
-        elif [ -f "${dir}/${fn}" ]; then # allow files in dir
-            . "${dir}/${fn}"
-            [ "$(type -t ${fn})" = 'function' ] && set -- $fn ${@:-}
-        elif [ -f "${dir}/${fn}${ext}" ]; then # allow files omitting extension
-            . "${dir}/${fn}${ext}"
-            [ "$(type -t ${fn})" = 'function' ] && set -- $fn ${@:-}
-        elif [ -d "${dir}/${fn}" ]; then # allow directory
-            dir+="/${fn}"
-            [ -f "${dir}/$fn" ] || [ -f "${dir}/${fn}${ext}" ] && set -- $fn ${@:-}
-        elif ! [ "${dir:0:${#root}}" = "$root" ]; then # allow the same as above, but in root directory
-            dir=$root
-            [ -f "${dir}/$fn" ] || [ -f "${dir}/${fn}${ext}" ] && set -- $fn ${@:-}
-        else
+        elif _isFile; then # allow files in dir
+            _setFile
+            . $file
+            _isFn && set -- $fn ${@:-} && continue
+            [ $# -eq 0 ] && break # Allow sourcing files without calling a function
+        elif _isDir; then # allow directory
+            _setDir
+            _isFile && set -- $fn ${@:-} && continue
+        fi
+        if [ $# -eq 0 ]; then
             printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$fn' could not be used as file, function or directory" 1>&2
             return 1
         fi
