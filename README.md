@@ -20,7 +20,7 @@ $ npm link
 ### Install with npm
 ```shell
 $ npm install --save-dev gabr
-$ npm link
+$ npm link gabr
 ```
 
 ## What is gabr.sh
