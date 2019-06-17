@@ -69,12 +69,9 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
         fi
     fi
 ( # @enter subshell
-    # dev/debug mode
-    if [ "$env" = 'dev' ] || [ "$env" = 'debug' ]; then
-        set -eEuo pipefail
-    fi
     # all modes
     if [ "$env" = 'dev' ] || [ "$env" = 'prod' ] || [ "$env" = 'debug' ]; then
+        set -eEuo pipefail
         local IFS=$'\n\t'
     fi
     # usage
