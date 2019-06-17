@@ -48,16 +48,6 @@ function gabr() {  # A function to run other functions
     if [ -z "${root:-}" ]; then
         local root=${GABR_ENV:-dev}
     fi
-    # Set from globals
-    if [ -n "${GABR_ROOT:-}" ]; then
-        root=${GABR_ROOT} # Optionally set a fixed root through a global
-    fi
-    if [ -n "${GABR_ENV:-}" ]; then
-        env=${GABR_ENV}
-    fi
-    if [ -n "${GABR_DEFAULT:-}" ]; then
-        default=${GABR_DEFAULT} # Optionally set a fixed namespace for 'usage' functionality
-    fi
     # prod mode
     if [ "$env" = 'prod' ]; then
         set -eEuo pipefail # this will crash terminal on error
