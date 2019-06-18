@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-. /home/nico/.nvm/versions/node/v11.7.0/bin/gabr
-usage='grab [directory | file] function [arguments] -- A function to call other functions.'
-gabr ${@:-}
