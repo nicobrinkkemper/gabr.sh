@@ -165,7 +165,7 @@ function usage() {
 The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates a function and variable for this name. If a function or variable already exist with this name, these will be used instead. The generated function boils down to the following snippet:
 
 ```bash
-$default=usage
+$default=$usage
 function $default() {
     echo ${!default} >&2
 }
