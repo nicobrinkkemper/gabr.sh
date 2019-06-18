@@ -1,24 +1,4 @@
-# Hello world example
-```shell
-$ npm install --save-dev gabr.sh
-$ npm link
-```
-> This will make `gabr.sh` globally available, but it will run as a file.
-> Which is enough for this example.
 
-```shell
-$ echo "\
-function helloworld() {
-  echo hello world
-}" > ./helloworld.sh
-```
-> Write some code to a file `./helloworld.sh`
-
-```shell
-$ gabr helloworld
-hello world
-```
-> Load the file *and* call the function with one argument
 
 ## With directory
 ```shell

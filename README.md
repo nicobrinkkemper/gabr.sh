@@ -31,6 +31,44 @@ Let's illustrate that with a flowchart.
 
 ![Alt text](./Gabr.sh.svg)
 
+Let's illustrate further with a code example. 
+```shell
+$ echo "\
+printf hello
+function helloworld() {
+  printf ' world\n'
+}
+" > ./helloworld.sh
+$ gabr helloworld
+hello world
+```
+> By naming the file and the function helloworld,
+> a tiny API emerged to call the function.
+
+## Why use gabr.sh?
+Consider the following commands to delete a tag with git:
+```shell
+git tag -d 1.0.1
+git push origin :refs/tags/1.0.1
+```
+I'll be honest to myself and say I won't remember this next time.
+Besides I have a lot of tags to delete.
+I can just write a quick function.
+```bash
+set -eu
+function deleteTag() {
+    git tag -d $1
+    git push origin :refs/tags/$1
+}
+```
+To run this like `gabr` would, one could simply write:
+```shell
+$ (. git.sh; deleteTag 1.0.1)
+```
+But doing it like this is hard to communicate and prone to human error. With `gabr` a more direct API emerges to do these kind of things:
+```
+$ gabr git deleteTag 1.0.1
+```
 
 ## Variables
 ### Local variables
@@ -137,3 +175,4 @@ function $default() {
 ## Flags
 
 Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
+
