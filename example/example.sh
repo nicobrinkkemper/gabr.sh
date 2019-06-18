@@ -12,4 +12,3 @@ if [ $# -eq 0 ]; then
 else
     declare usageFiles="" # this disables usage.md file options
 fi
-. ${dir:-}/usage.sh
