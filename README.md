@@ -20,7 +20,7 @@ $ npm link
 ### Install with npm
 ```shell
 $ npm install --save-dev gabr
-$ npm link
+$ npm link gabr
 ```
 
 ## What is gabr.sh
@@ -175,4 +175,7 @@ function $default() {
 ## Flags
 
 Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
+<<<<<<< HEAD
 
+=======
+>>>>>>> f20260c5725847356757b1219fef95cdc0c445ef
