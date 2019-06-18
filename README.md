@@ -4,7 +4,7 @@
 ## Installation
 ### Try out as portable file
 ```shell
-$ wget git@github.com:nicobrinkkemper/gabr.sh.git
+$ wget https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/gabr.sh
 $ source ./gabr.sh
 ```
 
