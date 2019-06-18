@@ -2,18 +2,27 @@
 # @file usage.sh
 #
 # @brief  Usage.sh contains a example on how to reimplement the usage behavior of gabr.
+source /dev/stdin << EOF
+$default() {
+    local -a bashsource=(${BASH_SOURCE[@]} ${fullCommand})
+    local stack="$(declare -F)"
+    local fullCommand="${fullCommand:-"usage"}"
+    echo "Usage: \
+\${fullCommand%*\ $default*}\
+\$(_usageFiles)\
+\$(_usageScope)\
+\${example:-}" >&2
+}
+EOF
+
 function _filename(){
     local filename=${1:-$BASH_SOURCE}
     local pathJuggle=${filename##*/};
     echo ${pathJuggle%%.*}
 }
-set +x
-declare stack=${stack:-$(declare -F)}
-if [ "$env" = 'debug' ]; then
-    set -x
-fi
+
 function _usageScope(){ # Prints all functions added to scope by gabr
-    if [ -z "${usageScope:-}" ]; then
+    if ! [ "${usageScope+set}" = "set" ]; then
         set +x
         local usageScope=$(
             echo "${stack}" "${stack}" "$(declare -F)" |
@@ -34,11 +43,11 @@ function _usageScope(){ # Prints all functions added to scope by gabr
 }
 
 function _usageFiles(){
-    if [ -z "${usageFiles:-}" ]; then
+    if ! [ "${usageFiles+set}" = "set" ]; then
         local findString=""
-        for bashsource in ${BASH_SOURCE[@]}
+        for file in ${bashsource[@]} ${BASH_SOURCE[@]}
         do
-            findString+="! -name $(_filename ${bashsource})${ext:-.sh} "
+            findString+="! -name $(_filename ${file})${ext:-.sh} "
         done
         local usageFiles=$(
             IFS=' '
@@ -55,13 +64,4 @@ function _usageFiles(){
         fi
     fi
     echo "${usageFiles:-}"
-}
-function usage(){
-    set +x
-    local fullCommand=${fullCommand:-"usage"}
-    echo "Usage: \
-${fullCommand}\
-$(_usageFiles)\
-$(_usageScope)\
-${example:-}" >&2
 }

@@ -10,12 +10,6 @@
 if [ $# -eq 0 ]; then
     set -- usage
 else
-    local usageFiles="" # this disables usage.md file options
+    declare usageFiles="" # this disables usage.md file options
 fi
-
-declare stack=$(declare -F) # this enables usage.sh to detect new functions added
-default=exampleUsage
-function exampleUsage(){
-    . ${dir:-.}/usage.sh # this loads usage.sh for this folder when needed
-    usage
-}
+. ${dir:-}/usage.sh

@@ -75,24 +75,26 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     if [ "$env" = 'dev' ] || [ "$env" = 'prod' ] || [ "$env" = 'debug' ]; then
         local IFS=$'\n\t'
     fi
-    # usage
-    if ! [ "$default" = 'usage'  ] && ! [ "$(type -t $default)" = 'function' ]; then
-        source /dev/stdin << EOF
-$default() {
-    echo '${!default}' 2>&2
-}
-EOF
-    elif ! [ "$(type -t usage)" = 'function' ]; then
-        usage() {
-            echo $usage >&2
-        }
-    fi
     # helpers
     _isFn(){    [ "$(type -t ${fn})" = 'function' ]; }
     _isFile(){  [ -f "${dir}/${fn}${ext}" ] || [ -f "${dir}/${fn}" ]; }
     _isDir(){   [ -d "${dir}/${fn}" ] || [ "${dir:0:${#root}}" = "$root" ]; }
+    _isDefault(){ [ "${fn}" = "${default}" ]; }
     _setFile(){ file=$([ -f "${dir}/${fn}${ext}" ] && echo "${dir}/${fn}${ext}" || echo "${dir}/${fn}"); }
     _setDir(){  dir=$([ -d "${dir}/${fn}" ] && echo "${dir}/${fn}" || echo "$root"); }
+    _setDefault(){
+        if [ "${fn}" = 'usage' ]]; then
+            usage() {
+                echo $usage >&2
+            }
+        else
+            source /dev/stdin << EOF
+$default() {
+    echo '${!default}' >&2
+}
+EOF
+        fi
+    }
     # begin processing arguments
     if [ $# -eq 0 ]; then
         if ! [ ${#args[@]} -eq 0 ]; then
@@ -125,6 +127,9 @@ EOF
         elif _isDir; then # allow directory
             _setDir
             _isFile && set -- $fn ${@:-} && continue
+        elif _isDefault; then
+            _setDefault
+            _isFn && set -- $fn ${@:-} && continue
         fi
         if [ $# -eq 0 ]; then
             printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$fn' could not be used as file, function or directory" 1>&2
