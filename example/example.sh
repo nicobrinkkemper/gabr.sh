@@ -14,7 +14,8 @@ else
 fi
 
 declare stack=$(declare -F) # this enables usage.sh to detect new functions added
-function usage(){
+default=exampleUsage
+function exampleUsage(){
     . ${dir:-.}/usage.sh # this loads usage.sh for this folder when needed
     usage
 }
