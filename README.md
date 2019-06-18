@@ -79,7 +79,7 @@ Gabr defines the following local variables. These will be available in files sou
 | env          	|       	| The strictness of the function           	| dev                                    	| May be set by `GABR_ENV`     	            |
 | root         	|       	| The fallback directory                   	| $PWD                                   	| May be set by `GABR_ROOT`    	            |
 | default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_ENV`              	|
-| $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Usage](#Usage)                     	|
+| $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)                     	|
 | usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | fn           	|       	| The called function                      	| usage                                  	|                                         	|
 | args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@}                    |
@@ -175,7 +175,3 @@ function $default() {
 ## Flags
 
 Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
-<<<<<<< HEAD
-
-=======
->>>>>>> f20260c5725847356757b1219fef95cdc0c445ef
