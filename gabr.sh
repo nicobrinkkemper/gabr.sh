@@ -83,7 +83,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     _setFile(){ file=$([ -f "${dir}/${fn}${ext}" ] && echo "${dir}/${fn}${ext}" || echo "${dir}/${fn}"); }
     _setDir(){  dir=$([ -d "${dir}/${fn}" ] && echo "${dir}/${fn}" || echo "$root"); }
     _setDefault(){
-        if [ "${fn}" = 'usage' ]]; then
+        if [ "${fn}" = 'usage' ]; then
             usage() {
                 echo $usage >&2
             }
