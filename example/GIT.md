@@ -8,6 +8,7 @@
 * [deleteStale()](#deleteStale)
 * [deleteBranch()](#deleteBranch)
 * [deleteTag()](#deleteTag)
+* [renameTag()](#renameTag)
 
 
 ## currentBranch()
@@ -81,4 +82,18 @@ Delete a remote branch
 ### Arguments
 
 * **$1** (version):
+
+## renameTag()
+
+Rename a tag
+### Example
+
+```bash
+    gabr example git deleteTag some-feature
+```
+
+### Arguments
+
+* **$1** (old): version
+* **$2** (new): version
 

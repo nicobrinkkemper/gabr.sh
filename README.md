@@ -31,6 +31,12 @@ Let's illustrate that with a flowchart.
 
 ![Alt text](./Gabr.sh.svg)
 
+
+> This flow-chart doesn't show how errors are handled.
+> When a argument is neither a function, file or directory a warning will show and the process is stopped.
+> For this reason it is rare to get to the `set -- usage` part, unless `gabr` is called
+> without any arguments.
+
 Let's illustrate further with a code example. 
 ```shell
 $ echo "\
@@ -148,26 +154,35 @@ $ export GABR_DEFAULT=help
 ## Functions
 
 ### function usage ()
-By default, this function will be generated and called as a last-resort:
+What's a good loop without a good exit case? If no arguments were given to `gabr`, there must still be something
+it can do. Exactly, it will look for a function called usage. It will do this like it would do for any other function.
+First the function check, then file, then directory. If even that fails, a last-resort function
+will be generated:
 ```bash
 local usage="gabr [directory | file] function [arguments] -- A function to call other functions."
 function usage() {
     echo $usage >&2
 }
 ```
-> If the function already exists, it will be called instead.
+> A example of extending usage behavior is given in [example/usage.sh](./example/usage.sh)
+> but could be improved upon.
 
-### function $default ()
-
-The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`. If `default` is not set to `usage`, `gabr` generates a function and variable for this name. If a function or variable already exist with this name, these will be used instead. The generated function boils down to the following snippet:
+If a file is sourced that doesn't contain a function with the same name.
+The following snippet could benefit end-users.
 
 ```bash
-$default=$usage
-function $default() {
-    echo ${!default} >&2
+if [ $# -eq 0 ]; then
+    set -- usage
+fi
+function usage(){
+    echo 'usage-info-for-this-file'
 }
 ```
-> The `!` introduces variable indirection. [Read more](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html)
+
+### function $default ()
+The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`.
+If `default` is not set to `usage`, `gabr` generates a last-resort function and variable for this name instead.
+This is done through variable indirection. ([reference](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html))
 
 ## Flags
 
