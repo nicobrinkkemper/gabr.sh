@@ -8,39 +8,67 @@ local -A versions=(
     ["4.3"]="4.3"
     ["4.4"]="4.4"
 )
-local -a bashvers=()
-while [[ -v versions["${1:-}"] ]]
-do
-    echo Added version ${1} 2>&2
-    bashvers+=(${versions["${1}"]})
-    shift
-done
+function _isVersion(){
+    [[ -v versions["${1:-}"] ]]
+}
+declare -a bashvers=()
+declare rootVolume=$(pwd)
+declare dir=$(git rev-parse --show-toplevel) # functions target root directory
+
+# Strip all version numbers from arguments and assign to array
+if _isVersion ${1:-}; then
+    while _isVersion ${1:-}
+    do
+        echo "Added version ${1}" >&2
+        bashvers+=(${versions["${1}"]})
+        shift
+    done
+fi
+
+# Implement usage.md
 if [[ $# -eq 0 ]]; then
     set  -- usage
     local usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
-else
-    dir=$(git rev-parse --show-toplevel) # functions target root directory
 fi
-if ! [[ ${#bashvers[@]} -eq 0 ]]; then
+
+# Run all versions when non givens
+if ! [[ -v bashvers ]]; then
+    echo "# Running for all versions" >&2
     bashvers=(${!versions[@]})
 fi
 
-function build()(
-    command docker build --build-arg bashver=${1:-$bashvers} --tag bats/bats:bash-${1:-$bashvers} .
+# Check for WSL
+case "$(cat /proc/version)" in
+    *Microsoft*)
+        echo "# Asumed Windows Subsystem for Linux" >&2
+        rootVolume=$(wslpath -w ${rootVolume})
+        ;;
+esac
+
+function build()( # -- e.g. docker 3.2 build
+    if [ $# -ne 0 ]; then  bashvers=${@}; fi
+    for bashver in ${bashvers[@]} 
+    do
+        docker build --build-arg bashver=${bashver} --tag bats/bats:bash-${bashver} .
+    done
 )
 
-function test()(
-    command docker run -it bash:${1:-$bashvers} --version
-    command time docker run\
-        -v $(pwd):/opt/gabr/\
-        -it bats/bats:bash-${1:-$bashvers} --tap /opt/gabr/test
+function test()( # -- e.g. docker 3.2 test
+    if [ $# -ne 0 ]; then  bashvers=${@}; fi
+    for bashver in ${bashvers[@]} 
+    do
+        docker run bash:${bashver} --version
+        time docker run\
+            -v ${rootVolume}:/opt/gabr/\
+            bats/bats:bash-${bashver} --tap /opt/gabr/test
+    done
 )
 
-function buildtest(){ # -- e.g. gabr docker 3.2 buildtest
-    build;
-    test;
+function buildtest(){ # -- e.g. docker 3.2 buildtest
+    build $@;
+    test $@;
 }
 else
     echo "To use ${BASH_SOURCE}, please update Bash to 4.3+" 1>&2
-    return
+    (exit 1)
 fi

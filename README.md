@@ -1,6 +1,6 @@
 # Gabr.sh
 [![npm package](https://img.shields.io/npm/v/gabr.sh.svg)](https://www.npmjs.com/package/gabr.sh)
-[![Continuous integration status for Linux and macOS](https://travis-ci.org/nicobrinkkemper/gabr.sh.svg?branch=master&label=travis%20build)](https://travis-ci.org/bats-core/bats-core)
+[![Continuous integration status for Linux and macOS](https://travis-ci.org/nicobrinkkemper/gabr.sh.svg?branch=master&label=travis%20build)](https://travis-ci.org/nicobrinkkemper/gabr.sh)
 ## Installation
 ### Try out as portable file
 ```shell
@@ -76,9 +76,8 @@ Gabr defines the following local variables. These will be available in files sou
 
 | variable     	| type  	| description                              	| default                                	| Note                                    	|
 |--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
-| env          	|       	| The strictness of the function           	| dev                                    	| May be set by `GABR_ENV`     	            |
 | root         	|       	| The fallback directory                   	| $PWD                                   	| May be set by `GABR_ROOT`    	            |
-| default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_ENV`              	|
+| default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_MODE`              	|
 | $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)                     	|
 | usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | fn           	|       	| The called function                      	| usage                                  	|                                         	|
@@ -88,45 +87,50 @@ Gabr defines the following local variables. These will be available in files sou
 | ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
-### GABR_ENV / env
-A global variable called `GABR_ENV` may be used to influence the value of `env`. `env`
-controls the strictness with which `gabr` runs. Files and functions ran by `gabr` will
-inherit this "strict-mode".
+### GABR_MODE / mode
+A global variable called `GABR_MODE` may be used to influence the value of `mode`. `mode`
+influences some common -opinionated- defaults. Files and functions ran by `gabr` will inherit this strictness. Let's call this strict-mode.
 
-There are three valid values for `GABR_ENV`: `dev`, `prod` and `debug`.
-Setting `GABR_ENV` to any other value will opt-out of strict-mode.
+There are two valid values for `GABR_MODE`: `strict` and `debug`.
+Each of these values will make the `gabr` function run in strict-mode.
+Setting `GABR_MODE` to any other value will opt-out of strict-mode.
 
-The behavior of the set builtin is complex. The [manual](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) gives more detailed information, but here is a reminder:
- - **-e** Exit immediately on errors
- - **-E** Inherit traps
- - **(-x)** Enter debug mode
- - **-u** Error on unset variables
- - **-o pipefail** the return value is that of the last error
-
-#### default (dev)
-When running as a file, the following snippet is set before the `gabr` function is called:
+### Strict-mode
+`gabr`'s strict-mode consists of slight variations of the following snippet:
 ```bash
-set -eEuo pipefail
-declare IFS=$'\n\t'
+1 set -eEuo pipefail # and: set -x
+2 IFS=$'\n\t'
+3 trap 'return $?' ERR SIGINT # or exit when run as file
 ```
+Let's go over the three lines:
 
-When running as a sourced function. `gabr` will postpone this snippet
-until the subshell is entered. This will ensure the main shell won't
-close (crash), but it will still fail early.
+1)
+    `set` allows you to change the values of shell options and set the positional parameters, or to display the names and values of shell variables. ([reference](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html))
+    - **-x** Enter debug mode
+    - **-e** Exit immediately on errors
+    - **-E** Inherit traps
+    - **-u** Error on unset variables
+    - **-o pipefail** the return value is that of the last error
+    
+2)
+    `IFS` is a string treated as a list of characters that is used for field splitting.
+    By default, this is set to \<space> \<tab> \<newline>. Spaces cause issues when entering 
+    arguments that resemble human language. This is why `IFS` is set to
+    \<tab> \<newline> in strict-mode. ([reference](https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html#tag_18_05_03))s
+3)
+    If `return` is executed by a `trap ERR` handler, the last command used to determine the non-zero status is the last command executed before the trap handler. They will ensure the conditions obeyed by the errexit (-e) option. This is mainly to support older Bash versions. Furthermore, `SIGINT` will be handled the same way, which allows a user to interrupt (ctrl+C) any long running script. ([reference](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html))
 
-#### prod
-Prod behaves similar to the default, with the addition of `set -e` inside
-the main shell. When running as a file (`npm link`), this doesn't have any effect. 
-When running as a sourced function, errors will close (crash) the shell.
-```shell
-$ export GABR_ENV=prod
-```
-
-#### debug
-Debug is similar to default, with the addition of `set -x` before and `set +x` after every
+#### debug-mode
+debug-mode is similar to strict-mode, with the addition of `set -x` before and `set +x` after every
 file source and function call.
 ```shell
-$ export GABR_ENV=debug
+$ export GABR_MODE=debug
+```
+
+#### opt-out
+To opt-out of strict-mode, try setting `GABR_MODE` to any other value.
+```shell
+$ export GABR_MODE=none
 ```
 
 ### GABR_ROOT / root

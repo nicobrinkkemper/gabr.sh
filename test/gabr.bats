@@ -1,10 +1,10 @@
-function return1(){
+function return1()(
     exitcode=1
     return 1
-}
+)
 
 function debug(){
-    echo failed-status-${GABR_ENV:-dev}="\"${status}\"" 1>&2
+    echo failed-status="\"${status}\"" 1>&2
     echo failed-output="\"${output}\"" 1>&2
     echo BASH_VERSION="\"${BASH_VERSION}\"" 1>&2
 }
@@ -36,13 +36,6 @@ function saybye(){
     [ "$result"  = 'sourcedhi sourced sourcedhi sourcedbye' ]
 }
 
-@test "Gabr returns non error code" {
-    source gabr.sh
-    run gabr
-    debug
-    [ $status -eq 0 ]
-}
-
 @test "Gabr errors the same return code" {
     source gabr.sh
     mkdir -p boo
@@ -57,49 +50,27 @@ function baa()(
     gabr gabr boo
 )
 " > baa.sh
-    GABR_ENV=prod
     run gabr boo
     debug
-    [ "$status" -eq 123 ] || [ "$status" -eq 1 ]
-    if [ "$status" -eq 1 ] && [ ${BASH_VERSION:0:1} -le 4 ] && [ ${BASH_VERSION:2:1} -lt 4 ]; then
-        skip "Skipped due to Bash version somehow not working on tests"
-        # I'm sorry, update bash for this
-    fi
+    [ $status -eq 123 ] # nice
     run gabr baa
     debug
     [ "$status" -eq 123 ]
-    GABR_ENV=debug
-    run gabr boo
+    run bash ./gabr.sh boo
     debug
-    [ "$status" -eq 123 ]
-    run gabr boo baa
-    debug
-    [ "$status" -eq 123 ]
-    GABR_ENV=prod
-    run gabr boo
-    debug
-    [ "$status" -eq 123 ]
-    run gabr baa
+    [ $status -eq 123 ] # nice
+    run bash ./gabr.sh baa
     debug
     [ "$status" -eq 123 ]
     trap 'rm -rf ./boo; rm -f ./baa.sh' RETURN
 }
 
-@test "Gabr global errors when a file exits" {
+@test "Gabr errors when a file exits or returns 1" {
     source gabr.sh
     mkdir -p spooky
     echo "\
 return 1
 " > spooky/spooky.sh
-    GABR_ENV=dev
-    run gabr spooky
-    debug
-    [ "$status" -eq 1 ]
-    GABR_ENV=debug
-    run gabr spooky
-    debug
-    [ "$status" -eq 1 ]
-    GABR_ENV=prod
     run gabr spooky
     debug
     [ "$status" -eq 1 ]
@@ -108,15 +79,6 @@ return 1
 
 @test "gabr errors when a function is undefined" {
     source gabr.sh
-    GABR_ENV=dev
-    run gabr undefined
-    debug
-    [ "$status" -eq 1 ]
-    GABR_ENV=debug
-    run gabr undefined
-    debug
-    [ "$status" -eq 1 ]
-    GABR_ENV=prod
     run gabr undefined
     debug
     [ "$status" -eq 1 ]
@@ -124,35 +86,14 @@ return 1
 
 @test "gabr errors when a function returns 1" {
     source gabr.sh
-    GABR_ENV=dev
     run gabr return1
     debug
     [ "$status" -eq 1 ]
-    GABR_ENV=debug
-    run gabr return1
-    debug
-    [ "$status" -eq 1 ]
-    GABR_ENV=prod
-    run gabr return1
-    debug
-    [ "$status" -eq 1 ]
-}
-
-@test "gabr crashes shell when env is prod" {
-    source gabr.sh
-    GABR_ENV=dev
-    result="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
-    GABR_ENV=debug
-    result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))"
-    GABR_ENV=prod
-    result+="$(echo $(gabr return1; echo "${GABR_ENV}_"))" # can not print due to crash of shell
-    echo failed-result="\"${result}\"" 1>&2
-    [ $result = "dev_debug_" ]
 }
 
 @test "gabr can change default functionality with GABR_DEFAULT/default" {
     source gabr.sh
-    GABR_ENV=dev
+    GABR_MODE=dev
     local normalOutput="$(gabr 2>&1)"
     echo failed-normalOutput="\"${normalOutput}\"" 1>&2
     [ -n "$normalOutput" ]
@@ -177,60 +118,33 @@ return 1
 
 @test "gabr can't be abused to execute malicious code through GABR_DEFAULT" {
     source gabr.sh
-    GABR_ENV=dev
+    GABR_MODE=dev
     GABR_DEFAULT='hi; exit 133; ho'
-    declare warningOutput="$(gabr 2>&1)"
-    echo failed-warningOutput="\"${warningOutput}\"" 1>&2
-    ! [ "${warningOutput##*Warning\:}" = "${warningOutput}" ]
+    run gabr
+    debug
+    ! [ "${output##*Warning\:}" = "${output}" ]
     GABR_DEFAULT='hack'
     declare hack="| echo hacked; eval exit 777; || echo hi && echo ho << exit 4"
-    declare hackOutput="$(gabr 2>&1)"
-    echo failed-hackOutput="\"${hackOutput}\"" 1>&2
-    [ "${hackOutput}" = "${hack}" ]
+    run gabr
+    debug
+    [ "${output}" = "${hack}" ]
 }
 
 @test "gabr does not walk over a error" {
-    function undefined(){
-        iamnotdefined;
-        declare -x iamnotdefined=iamnotdefined
-        return $?
-    }
-    local exitcode=0 # needs to be set to a variable in order to inherit Gabr's exitcode\
+    function dontwalkover()(
+        return1
+        echo nowido
+        ( return $? );
+    )
     source gabr.sh
-    GABR_ENV=dev
-    run gabr undefined;
-    ! [ -v iamnotdefined ]
-    GABR_ENV=debug
-    run gabr undefined;
-    ! [ -v iamnotdefined ]
-    GABR_ENV=prod
-    run gabr undefined;
-    ! [ -v iamnotdefined ]
+    run gabr dontwalkover;
+    [ "$status" -eq 1 ]
+    [ "$output" = "" ]
+    GABR_STRICT_MODE=off
+    run gabr dontwalkover;
+    [ "$status" -eq 0 ]
+    [ "$output" = "nowido" ]
 }
-
-@test "Running and sourcing gabr only adds Gabr to scope" {
-    function diffStack(){
-        difference(){
-            echo "${stack}" "${stack}" "$@" | tr ' ' '\n' | sort | uniq -u;
-        }
-        difference ${@} 
-    }
-    local herestack=$(declare -F -f)
-    source gabr.sh
-    local stack="$(declare -F)"
-    local -a result=($(
-        gabr diffStack $(declare -F -f);
-        echo -;
-        gabr diffStack $(declare -F -f)
-        echo -;
-        echo "${herestack}" "${herestack}" "$(declare -F -f)" | tr ' ' '\n' | sort | uniq -u
-    ))
-    local str=$(IFS=$' '; echo ${result[*]})
-    echo failed-result=$str 1>&2
-    [ "$str" = "- - gabr" ]
-
-}
-
 
 @test "Gabr does not alter spaces in arguments" {
     echo "\
@@ -238,10 +152,10 @@ function whatdidisay(){
     echo \"\${@}\"
 }" > ./whatdidisay.sh
     source gabr.sh
-    local result="$(gabr whatdidisay ' jim ' " has long " " cheeks ")"
-    echo failed-result="\"${result}\"" 1>&2
+    run gabr whatdidisay ' jim ' " has long " " cheeks "
+    debug
+    [ "$output"  = ' jim   has long   cheeks ' ]
     trap 'rm -f ./whatdidisay.sh' RETURN
-    [ "$result"  = ' jim   has long   cheeks ' ]
 }
 
 @test "Gabr sees tabs as separator" {
@@ -250,23 +164,25 @@ function spectabular(){
     echo \"\${@}\"
 }" > ./spectabular.sh
     source gabr.sh
-    local result="$(gabr spectabular "$(echo -e '\t')<tabs>$(echo -e '\t')" "<ta$(echo -e '\t')bs>")"
-    echo failed-result="\"${result}\"" 1>&2
+    run gabr spectabular "$(echo -e '\t')<tabs>$(echo -e '\t')" "<ta$(echo -e '\t')bs>"
+    debug
+    [ "$output"  = "<tabs> <ta bs>" ]
     trap 'rm -f ./spectabular.sh' RETURN
-    [ "$result"  = "<tabs> <ta bs>" ]
 }
 
 
 @test "Gabr has minimal api when file, directory and function named the same" {
     mkdir -p 'sophie'
+    mkdir -p 'sophie/sophie'
     echo "\
 function sophie(){
     echo Sophie
-}" > sophie/sophie.sh
+}" > sophie/sophie/sophie.sh
     source gabr.sh
-    local result="$(gabr sophie)"
+    run gabr sophie
+    debug
+    [ "$output"  = "Sophie" ]
     trap 'rm -rf sophie' RETURN
-    [ "$result"  = "Sophie" ]
 }
 
 @test "Gabr runs in directory relative to file in which function is called" {
@@ -277,34 +193,33 @@ function whereru(){
 }
 " > whereru/whereru.sh
     source gabr.sh
-    local localPWD=$(pwd)
-    local result="$(gabr whereru)"
-    echo failed-result="\"${result[@]: -8}\"" 1>&2
+    run gabr whereru
+    echo failed-result="\"${output: -8}\"" 1>&2
+    [ "$status" -eq 0 ]
+    [ "${output: -8}"  = "/whereru" ]
     trap 'rm -rf whereru' RETURN
-    [ "${result[@]: -8}"  = "/whereru" ]
 }
 
 @test "Gabr can cd to directories and run files" {
-    mkdir -p '.jimtest'
+    mkdir -p 'jim'
     echo "\
 function jim(){
-    echo jim >&2
-    echo .jimtest/willem.sh willem
-}" > .jimtest/jim.sh
+    printf '%s ' jim >&2
+    gabr jim/willem.sh willem
+}" > jim/jim.sh
 echo "\
-dir="\${dir:-.}/.jimtest"
 function willem(){
-    echo willem >&2
+    printf '%s ' willem >&2
     gabr bonito bonito
-}" > .jimtest/willem.sh
+}" > jim/willem.sh
 echo "\
 function bonito(){
-    echo bonito >&2
-    echo \"de wever\"
-}" > .jimtest/bonito
+    printf '%s ' bonito >&2
+    printf \"de wever\" >&2
+}" > jim/bonito
     source gabr.sh
-    local result="$(gabr $(gabr .jimtest jim))"
-    echo failed-result="\"${result}\"" 1>&2
-    trap 'rm -rf .jimtest' RETURN
-    [ "$result"  = "de wever" ]
+    run gabr jim
+    debug
+    [ "$output"  = 'jim willem bonito de wever' ]
+    trap 'rm -rf jim' RETURN
 }

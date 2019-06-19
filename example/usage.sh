@@ -32,7 +32,7 @@ function _usageScope(){ # Prints all functions added to scope by gabr
                 awk '! /^_/{print $0}' | # hide underscore prefixed
                 tr '\n' "|"
         );
-        if [ "$env" = 'debug' ]; then
+        if [ -n "${GABR_DEBUG:-}" ]; then
             set -x
         fi
         if [ -n "${usageScope:-}" ] && [ ${#usageScope} -gt 1 ]; then

@@ -19,6 +19,9 @@ if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ]
 then
 function gabr() {  # A function to run other functions 
     local FUNCNEST=50
+    if ! [[ -v GABR_STRICT_MODE ]]; then
+        local GABR_STRICT_MODE=on
+    fi
     if ! [[ -v fullCommand ]]; then
         local fullCommand="$FUNCNAME ${@}"
     fi
@@ -37,18 +40,11 @@ function gabr() {  # A function to run other functions
     if ! [[ -v dir ]]; then
         local dir=.
     fi
-    if ! [[ -v env ]]; then
-        local env=${GABR_ENV:-dev}
-    fi
     if ! [[ -v default ]]; then
         local default=${GABR_DEFAULT:-usage} # By default a function called 'usage' prints a variable called 'usage' through variable indirection
     fi
     if ! [[ -v root ]]; then
         local root=${GABR_ROOT:-${PWD}}
-    fi
-    # prod mode
-    if [[ $env = prod ]]; then
-        set -eEuo pipefail # this will crash terminal on error
     fi
     # usage
     if ! [[ -v usage ]]; then
@@ -58,8 +54,8 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     # customize usage
     if ! [[ $default = usage ]]; then
-        if ! [[ -v default ]] || ! [[ $default = $(echo "${default}" | tr -dc "[:alnum:]" | tr "[:upper:]" "[:lower:]") ]]; then
-            printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may only contain [:alnum:], [:upper:], [:lower:]" 1>&2
+        if ! [[ -v default ]] || ! [[ \'$default\' = ${default@Q} ]]; then
+            printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may not contain special characters" 1>&2
             return 1
         fi
         if ! [[ -v $default ]]; then
@@ -68,16 +64,16 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     # arguments
 ( # @enter subshell
-    if [[ $env = dev ]] || [[ $env = debug ]]; then
+    if [ "${GABR_STRICT_MODE}" = 'on' ]; then
         set -eEuo pipefail
-    fi
-    if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
         local IFS=$'\n\t'
+        trap 'return $?' ERR SIGINT
+        GABR_STRICT_MODE="already-on"
     fi
     # helpers
     _isFn(){    [[ $(type -t ${fn}) = function ]]; }
     _isFile(){  [[ -f ${dir}/${fn}${ext} || -f ${dir}/${fn} ]]; }
-    _isDir(){   [[ -d ${dir}/${fn} || ${dir:0:${#root}} = $root ]]; }
+    _isDir(){   [[ -d ${dir}/${fn} ]] || [[ ${dir:0:${#root}} = $root ]]; }
     _isDefault(){ [[ ${fn} = ${default} ]]; }
     _setFile(){ file=$([[ -f ${dir}/${fn}${ext} ]] && echo ${dir}/${fn}${ext} || echo ${dir}/${fn}); }
     _setDir(){  dir=$([[ -d ${dir}/${fn} ]] && echo ${dir}/${fn} || echo $root); }
@@ -110,22 +106,24 @@ EOF
         if [ "${fn::1}" = '-' ]; then
             break
         elif _isFn; then
-            if [[ $env = debug ]]; then set -x; fi
+            if [[ -v GABR_DEBUG_MODE ]]; then set -x; fi
             cd $dir
             dir=.
             ${fn} ${@:-};
-            if [[ $env = debug ]]; then set +x; fi
+            if [[ -v GABR_DEBUG_MODE ]]; then set +x; fi
             break
         elif _isFile; then # allow files in dir
             _setFile
-            if [[ $env = debug ]]; then set -x; fi
+            if [[ -v GABR_DEBUG_MODE ]]; then set -x; fi
             . $file
-            if [[ $env = debug ]]; then set +x; fi
+            if [[ -v GABR_DEBUG_MODE ]]; then set +x; fi
             _isFn && set -- $fn ${@:-} && continue
             [ $# -eq 0 ] && break # Allow sourcing files without calling a function
         elif _isDir; then # allow directory
             _setDir
-            _isFile && set -- $fn ${@:-} && continue
+            if _isDir || _isFile; then 
+                set -- $fn ${@:-} && continue
+            fi
         elif _isDefault; then
             # usage
             _setDefault
@@ -137,14 +135,12 @@ EOF
         fi
     done
     return;
-# @close subshell
-)
+) # @close subshell
 }
+else
+    echo "To use ${BASH_SOURCE}, please update Bash to 4.3+" 1>&2
+    (exit 1)
 fi
-if [ "$0" = "$BASH_SOURCE" ]; then
-    if [[ $env = dev ]] || [[ $env = prod ]] || [[ $env = debug ]]; then
-        set -eEuo pipefail
-        declare IFS=$'\n\t'
-    fi
+if [[ $0 = $BASH_SOURCE ]]; then
     gabr ${*}
 fi
