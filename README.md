@@ -109,7 +109,7 @@ Let's go over the three lines:
 2)  `IFS` is a string treated as a list of characters that is used for field splitting.
     By default, this is set to \<space> \<tab> \<newline>. \<space> causes issues when entering 
     arguments that contain spaces, such as sentences. This is why `IFS` is set to
-    \<tab> \<newline> in strict-mode. ([reference](https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html#tag_18_05_03))s
+    \<tab> \<newline> in strict-mode. ([reference](https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html#tag_18_05_03))
     
 3)
     If `return` is executed by a `trap ERR` handler, the last command used to determine the non-zero status is the last command executed before the trap handler. They will ensure the conditions obeyed by the errexit (-e) option. This is mainly to support older Bash versions. Furthermore, `SIGINT` will be handled the same way, which allows a user to interrupt (ctrl+C) any long running script. ([reference](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html))
