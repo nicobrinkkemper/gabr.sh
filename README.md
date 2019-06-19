@@ -97,6 +97,7 @@ trap 'return $?' ERR SIGINT
 ```
 This snippet will run once inside the subshell where the function is called and the file is sourced.
 Let's go over the three lines:
+
 1)
     `set` allows you to change the values of shell options and set the positional parameters, or to display the names and values of shell variables. ([reference](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html))
     - **-x** Enter debug mode
