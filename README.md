@@ -86,7 +86,7 @@ Gabr defines the following local variables. These will be available in files sou
 | default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_DEFAULT`            	|
 | $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)              	|
 | usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
-| fn           	|       	| The called function                      	| usage                                  	|                                         	|
+| fn           	|       	| The called function                      	|                                     	|                                         	|
 | args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@}                    |
 | file        	|       	| The sourced file                       	|                                         	|                                         	|
 | dir          	|       	| The relative directory of the file     	| .                                      	| Wil be cd'd to before calling the function|
@@ -94,7 +94,7 @@ Gabr defines the following local variables. These will be available in files sou
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
 ### Global variables
-### GABR_STRICT_MODE (default:true)
+### GABR_STRICT_MODE (default:on)
 A global variable called `GABR_STRICT_MODE` may be used to toggle the following snippet:
 ```bash
 set -eEuo pipefail
