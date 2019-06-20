@@ -31,6 +31,8 @@
     "url": "https://github.com/nicobrinkkemper/gabr.sh/issues"
   },
   "homepage": "https://github.com/nicobrinkkemper/gabr.sh#readme",
-  "devDependencies": {},
+  "devDependencies": {
+    "release-it": "^12.3.0"
+  },
   "dependencies": {}
 }

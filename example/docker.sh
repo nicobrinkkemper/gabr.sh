@@ -25,7 +25,7 @@ if _isVersion ${1:-}; then
 fi
 
 # Implement usage.md
-if [[ $# -eq 0 ]]; then
+if [ $# -eq 0 ]; then
     set  -- usage
     local usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
 else
