@@ -14,8 +14,6 @@ $ git clone https://github.com/nicobrinkkemper/gabr.sh.git gabr
 $ cd gabr
 $ npm link
 ```
-> When installed with `npm link`, `gabr` will run as a file.
-> If you want to run `gabr` as a local function, try `source $(which gabr)`
 
 ### Install with npm
 ```shell
@@ -93,6 +91,10 @@ Gabr defines the following local variables. These will be available in files sou
 | ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
+> If you want to run `gabr` as a local function, try `. gabr`
+> or simple `. ./gabr.sh`.
+> This allows the `gabr` function to inherit local variables.
+
 ### Global variables
 ### GABR_STRICT_MODE (default:on)
 A global variable called `GABR_STRICT_MODE` may be used to toggle the following snippet:
@@ -118,7 +120,7 @@ Let's go over the three lines:
     \<tab> \<newline> in strict-mode. ([reference](https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html#tag_18_05_03))
     
 3)
-    If `return` is executed by a `trap ERR` handler, the last command used to determine the non-zero status is the last command executed before the trap handler. They will ensure the conditions obeyed by the errexit (-e) option. This is mainly to support older Bash versions. Furthermore, `SIGINT` will be handled the same way, which allows a user to interrupt (ctrl+C) any long running script. ([reference](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html))
+    If `return` is executed by a `trap ERR` handler, the last command used to determine the non-zero status is the last command executed before the trap handler. `trap 'return $?' ERR` will ensure the conditions obeyed by the errexit (-e) option for  older Bash versions. Furthermore, `SIGINT` will be handled the same way, which allows a user to interrupt (ctrl+C) any long running script. ([reference](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html))
 
 To opt-out of strict-mode:
 ```shell

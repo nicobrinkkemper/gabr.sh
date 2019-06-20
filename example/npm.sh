@@ -27,7 +27,7 @@ Usage: deprecate [version] [message] -- e.g. deprecate 0.0.2 no long need it
     npm deprecate ${name}@${version} ${reason:-"${version} is no longer supported"}
 }
 
-if [ -z "$(which node)" ]; then
+if ! command node; then
     echo "Warning: node is not available" 1>&2
 fi
 if [ -z "${version:-}" ]; then

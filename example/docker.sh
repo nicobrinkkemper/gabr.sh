@@ -9,7 +9,7 @@ local -A versions=(
     ["4.4"]="4.4"
 )
 function _isVersion(){
-    [[ -v versions["${1:-}"] ]] && [[ ${versions[${1}]} = ${1} ]]
+    ! [[ $# -eq 0 ]] && [[ ${versions[${1}]} = ${1} ]]
 }
 declare -a bashvers=()
 declare rootVolume=$(pwd)
@@ -28,9 +28,9 @@ fi
 if [[ $# -eq 0 ]]; then
     set  -- usage
     local usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
-# else
-fi
+else
     declare dir=$(git rev-parse --show-toplevel) # functions target root directory
+fi
 
 # Run all versions when non givens
 if ! [[ -v bashvers ]]; then

@@ -103,6 +103,7 @@ EOF
         fn=${1}
         shift
         args=(${@:-})
+        echo ${dir:0:${#root}}
         if [ "${fn::1}" = '-' ]; then
             break
         elif _isFn; then
