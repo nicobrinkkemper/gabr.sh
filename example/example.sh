@@ -8,7 +8,7 @@
 #   Usage: gabr example human [cry|laugh|smile|stare]
 #   
 
-declare stack="$(declare -F)" # start keeping count of stack (usage.md will do difference check)
+declare stack="$(declare -f -F)" # start keeping count of stack (usage.md will do difference check)
 if [ $# -eq 0 ]; then
     set -- usage
 fi

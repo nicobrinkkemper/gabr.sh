@@ -73,11 +73,12 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     fi
     # helpers
     _isFn(){    [ "$(type -t ${fn})" = 'function' ]; }
-    _isFile(){  [ -f "${dir}/${fn}${ext}" ] || [ -f "${dir}/${fn}" ]; }
-    _isDir(){   [ -d "${dir}/${fn}" ] || [ "${dir:0:${#root}}" = "$root" ] && ! [ "$dir" = "$root" ]; }
+    _isDebug(){ [[ -n ${GABR_DEBUG_MODE:-} ]]; }
+    _isFile(){  [ -f "${dir}/${fn}" ]; }
+    _isFileExt(){  [ -f "${dir}/${fn}${ext}" ]; }
+    _isDir(){   [ -d "${dir}/${fn}" ]; }
     _isDefault(){ [ "${fn}" = "${default}" ]; }
-    _setFile(){ file=$([ -f "${dir}/${fn}${ext}" ] && echo "${dir}/${fn}${ext}" || echo "${dir}/${fn}"); }
-    _setDir(){  dir=$([ -d "${dir}/${fn}" ] && echo "${dir}/${fn}" || echo "$root"); }
+    _isRoot()( ! [ "${dir:0:${#root}}" = "$root" ] )
     _setDefault(){
         if [ "${fn}" = 'usage' ]; then
             usage() {
@@ -102,38 +103,50 @@ EOF
     while ! [ $# -eq 0 ];
     do
         fn=${1}
-        shift
-        args=(${@:-})
-        if [ "${fn::1}" = '-' ]; then
+        if [ "${fn::1}" = '-' ]; then # disallow dash
             break
-        elif _isFn; then
-            if [ -n "${GABR_DEBUG_MODE:-}" ]; then set -x; fi
+        elif _isFn; then # call a function
+            shift
+            args=(${@:-})
             cd $dir
             dir=.
+            _isDebug && set -x
             ${fn} ${@:-};
-            if [ -n "${GABR_DEBUG_MODE:-}" ]; then set +x; fi
+            _isDebug && set +x
             break
-        elif _isFile; then # allow files in dir
-            _setFile
-            if [ -n "${GABR_DEBUG_MODE:-}" ]; then set -x; fi
-            . $file
-            if [ -n "${GABR_DEBUG_MODE:-}" ]; then set +x; fi
-            _isFn && set -- $fn ${@:-} && continue
-            [ $# -eq 0 ] && break # Allow sourcing files without calling a function
+        elif [ -n "${file:-}" ]; then # source a file
+            file=$file
+            if ! [ -r "${file:-}" ]; then
+                printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$file' is not a readable file" 1>&2
+                return 1
+            fi
+            shift
+            args=(${@:-})
+            _isDebug && set -x
+            . $file # source the file
+            _isDebug && set -x
+            unset file
+            set -- $fn ${@:-} # continue looking for a function
+        elif _isFileExt; then # allow files with extension
+            file=$dir/${fn}$ext
+            continue
+        elif _isFile; then # allow files without extension
+            file=$dir/$fn
+            continue
         elif _isDir; then # allow directory
-            _setDir
-            if _isDir || _isFile; then
-                set -- $fn ${@:-} && continue
-            elif [ $# -eq 0 ]; then
-                set -- $default && continue
-            fi 
-        elif _isDefault; then
+            dir=$dir/$fn
+            continue
+        elif _isRoot; then # allow fallback directory (will be true if dir does not start with root)
+            dir=$root
+            continue
+        elif _isDefault; then  # allow generated default function
             _setDefault
-            _isFn && set -- $fn ${@:-} && continue
-        fi
-        if [ $# -eq 0 ]; then
+        else
             printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$fn' could not be used as file, function or directory" 1>&2
             return 1
+        fi
+        if ! _isFn; then # If a function is sourced or generated (or has magically appeared), don't shift
+            shift
         fi
     done
     return;

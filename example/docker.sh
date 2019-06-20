@@ -9,7 +9,7 @@ local -A versions=(
     ["4.4"]="4.4"
 )
 function _isVersion(){
-    ! [[ $# -eq 0 ]] && [[ ${versions[${1}]} = ${1} ]]
+    [ -v versions["${1:-}"] ] && [[ ${versions[${1}]} = ${1} ]]
 }
 declare -a bashvers=()
 declare rootVolume=$(pwd)
@@ -25,7 +25,7 @@ if _isVersion ${1:-}; then
 fi
 
 # Implement usage.md
-if [ $# -eq 0 ]; then
+if [[ $# -eq 0 ]]; then
     set  -- usage
     local usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
 else
