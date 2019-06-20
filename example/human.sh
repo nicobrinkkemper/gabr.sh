@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ "${1:-usage}" = 'usage' ]; then
+if [ $# -eq 0 ]; then
     set  -- usage
 fi
 

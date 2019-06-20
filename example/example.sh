@@ -11,6 +11,7 @@
 declare stack="$(declare -F)" # start keeping count of stack (usage.md will do difference check)
 if [ $# -eq 0 ]; then
     set -- usage
-else
+fi
+if ! [ "${1:-usage}" = 'usage' ]; then
     declare usageFiles="" # disable file listing
 fi

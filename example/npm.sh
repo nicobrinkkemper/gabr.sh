@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-if [ "${1:-usage}" = 'usage' ]; then
+if [[ $# -eq 0 ]]; then
     set  -- usage
-else
+fi
+if [ "${1:-usage}" = 'usage' ]; then
     dir=$(git rev-parse --show-toplevel) # functions target root directory
 fi
 
