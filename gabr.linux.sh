@@ -73,7 +73,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     # helpers
     _isFn(){    [[ $(type -t ${fn}) = function ]]; }
     _isFile(){  [[ -f ${dir}/${fn}${ext} || -f ${dir}/${fn} ]]; }
-    _isDir(){   [[ -d ${dir}/${fn} ]] || [[ ${dir:0:${#root}} = $root ]]; }
+    _isDir(){   [[ -d ${dir}/${fn} ]] || [[ ${dir:0:${#root}} = $root ]] && ! [[ $dir = $root ]]; }
     _isDefault(){ [[ ${fn} = ${default} ]]; }
     _setFile(){ file=$([[ -f ${dir}/${fn}${ext} ]] && echo ${dir}/${fn}${ext} || echo ${dir}/${fn}); }
     _setDir(){  dir=$([[ -d ${dir}/${fn} ]] && echo ${dir}/${fn} || echo $root); }
@@ -121,11 +121,13 @@ EOF
             [ $# -eq 0 ] && break # Allow sourcing files without calling a function
         elif _isDir; then # allow directory
             _setDir
-            if _isDir || _isFile; then 
+            if _isDir || _isFile; then # allow dir/file with same name
                 set -- $fn ${@:-} && continue
+            elif [ $# -eq 0 ]; then # allow default file for directory
+                set -- $default && continue 
             fi
         elif _isDefault; then
-            # usage
+            # usage (by now it is not a file nor a function)
             _setDefault
             _isFn && set -- $fn ${@:-} && continue
         fi

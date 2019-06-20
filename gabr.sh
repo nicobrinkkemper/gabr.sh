@@ -42,14 +42,11 @@ function gabr() {  # A function to run other functions
     if [ -z "${dir:-}" ]; then
         local dir=.
     fi
-    if [ -z "${mode:-}" ]; then
-        local mode=${GABR_MODE:-strict}
-    fi
     if [ -z "${default:-}" ]; then
         local default=${GABR_DEFAULT:-usage} # By default a function called 'usage' prints a variable called 'usage' through variable indirection
     fi
     if [ -z "${root:-}" ]; then
-        local root=${GABR_MODE:-dev}
+        local root=${GABR_ROOT:-${PWD}}
     fi
     # usage
     if [ -z "${usage:-}" ]; then
@@ -60,7 +57,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     # customize usage
     if ! [ "$default" = 'usage' ]; then
         if [ -z "${default:-}" ] || ! [ "[${default}]" = "$(printf '[%q]\n' "${default}")" ]; then
-            printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may only contain [:alnum:], [:upper:], [:lower:]" 1>&2
+            printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "default may not contain special characters" 1>&2
             return 1
         fi
         if [ -z "$(declare -p ${default} 2>/dev/null)" ]; then
@@ -77,7 +74,7 @@ ${FUNCNAME} [directory | file] function [arguments] -- A function to call other 
     # helpers
     _isFn(){    [ "$(type -t ${fn})" = 'function' ]; }
     _isFile(){  [ -f "${dir}/${fn}${ext}" ] || [ -f "${dir}/${fn}" ]; }
-    _isDir(){   [ -d "${dir}/${fn}" ] || [ "${dir:0:${#root}}" = "$root" ]; }
+    _isDir(){   [ -d "${dir}/${fn}" ] || [ "${dir:0:${#root}}" = "$root" ] && ! [ "$dir" = "$root" ]; }
     _isDefault(){ [ "${fn}" = "${default}" ]; }
     _setFile(){ file=$([ -f "${dir}/${fn}${ext}" ] && echo "${dir}/${fn}${ext}" || echo "${dir}/${fn}"); }
     _setDir(){  dir=$([ -d "${dir}/${fn}" ] && echo "${dir}/${fn}" || echo "$root"); }
@@ -125,7 +122,11 @@ EOF
             [ $# -eq 0 ] && break # Allow sourcing files without calling a function
         elif _isDir; then # allow directory
             _setDir
-            _isDir || _isFile && set -- $fn ${@:-} && continue
+            if _isDir || _isFile; then
+                set -- $fn ${@:-} && continue
+            elif [ $# -eq 0 ]; then
+                set -- $default && continue
+            fi 
         elif _isDefault; then
             _setDefault
             _isFn && set -- $fn ${@:-} && continue

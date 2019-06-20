@@ -58,7 +58,7 @@ function baa()(
     [ "$status" -eq 123 ]
     run bash ./gabr.sh boo
     debug
-    [ $status -eq 123 ] # nice
+    [ $status -eq 123 ]
     run bash ./gabr.sh baa
     debug
     [ "$status" -eq 123 ]

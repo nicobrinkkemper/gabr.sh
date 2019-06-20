@@ -4,9 +4,9 @@
 # @brief  Usage.sh contains a example on how to reimplement the usage behavior of gabr.
 source /dev/stdin << EOF
 $default() {
-    local -a bashsource=(${BASH_SOURCE[@]} ${fullCommand})
-    local stack="$(declare -F)"
+    local stack="${stack:-$(declare -F)}"
     local fullCommand="${fullCommand:-"usage"}"
+    local -a bashsource=(${BASH_SOURCE[@]} ${fullCommand})
     echo "Usage: \
 \${fullCommand%*\ $default*}\
 \$(_usageFiles)\

@@ -172,10 +172,18 @@ The following snippet could benefit end-users.
 
 ```bash
 if [ $# -eq 0 ]; then
+    usage='help-info-for-this-file'
+    set -- usage
+fi
+```
+Or as a function
+
+```bash
+if [ $# -eq 0 ]; then
     set -- usage
 fi
 function usage(){
-    echo 'usage-info-for-this-file'
+    echo 'help-info-for-this-file'
 }
 ```
 
@@ -183,6 +191,46 @@ function usage(){
 The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`.
 If `default` is not set to `usage`, `gabr` generates a last-resort function and variable for this name instead.
 This is done through variable indirection. ([reference](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html))
+
+In most cases, the following snippet would suffice for files that don't contain a function
+with the same name:
+```bash
+if [ $# -eq 0 ]; then
+    set -- otherUsage
+fi
+otherUsage(){
+    "help-info-for-this-file"
+}
+```
+But you can take it further
+```bash
+if [ $# -eq 0 ]; then
+    default=otherUsage
+    otherUsage="help-info-for-this-file"
+    set -- $default
+fi
+```
+And even further with globals.
+```shell
+$ export GABR_DEFAULT=index
+$ mkdir -p example_default
+$ echo "\
+index(){
+    find *.sh
+}
+" > ./example/index.sh
+```
+
+
+```bash
+if [ $# -eq 0 ]; then
+    default=otherUsage
+    otherUsage="help-info-for-this-file"
+    set -- $default
+fi
+```
+
+
 
 ## Flags
 

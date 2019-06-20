@@ -7,9 +7,8 @@
 #   $ gabr example human
 #   Usage: gabr example human [cry|laugh|smile|stare]
 #   
-if [ $# -eq 0 ]; then
-    set -- usage
-else
-    declare usageFiles="" # this disables usage.md file options
+
+declare stack="$(declare -F)" # start keeping count of stack (usage.md will do difference check)
+if [ $# -ne 0 ]; then
+    declare usageFiles="" # disable file listing
 fi
-. ${dir:-}/usage.sh
