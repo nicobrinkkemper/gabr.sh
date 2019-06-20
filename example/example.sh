@@ -9,6 +9,8 @@
 #   
 
 declare stack="$(declare -F)" # start keeping count of stack (usage.md will do difference check)
-if [ $# -ne 0 ]; then
+if [ $# -eq 0 ]; then
+    set -- usage
+else
     declare usageFiles="" # disable file listing
 fi
