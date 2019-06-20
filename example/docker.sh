@@ -25,12 +25,13 @@ if _isVersion ${1:-}; then
 fi
 
 # Implement usage.md
-if [[ $# -eq 0 ]]; then
+if [ "${1:-usage}" = 'usage' ]; then
     set  -- usage
     local usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
-# else
-fi
+else
     declare dir=$(git rev-parse --show-toplevel) # functions target root directory
+fi
+    
 
 # Run all versions when non givens
 if ! [[ -v bashvers ]]; then

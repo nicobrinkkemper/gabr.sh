@@ -2,7 +2,7 @@
 # @file git.sh
 #
 # @brief  Git.sh contains some one-off git functions. To serve as example.
-if [[ $# -eq 0 ]]; then
+if [ "${1:-usage}" = 'usage' ]; then
     set  -- usage
 else
     dir=$(git rev-parse --show-toplevel) # functions target root directory

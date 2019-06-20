@@ -34,8 +34,8 @@ Let's illustrate that with a flowchart.
 
 > This flow-chart doesn't show how errors are handled.
 > When a argument is neither a function, file or directory a warning will show and the process is stopped.
-> For this reason it is rare to get to the `set -- usage` part, unless `gabr` is called
-> without any arguments.
+> For this reason `set -- usage` runs only when the `gabr` function is called
+> without any arguments, or a directory is called without arguments.
 
 Let's illustrate further with a code example. 
 ```shell
@@ -112,7 +112,7 @@ Let's go over the three lines:
     - **-u** Error on unset variables
     - **-o pipefail** the return value is that of the last error
     
-2)  `IFS` is a string treated as a list of characters that is used for field splitting.
+1)  `IFS` is a string treated as a list of characters that is used for field splitting.
     By default, this is set to \<space> \<tab> \<newline>. \<space> causes issues when entering 
     arguments that contain spaces, such as sentences. This is why `IFS` is set to
     \<tab> \<newline> in strict-mode. ([reference](https://pubs.opengroup.org/onlinepubs/9699919799.2018edition/utilities/V3_chap02.html#tag_18_05_03))
