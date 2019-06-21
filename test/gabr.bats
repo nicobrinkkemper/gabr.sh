@@ -93,25 +93,30 @@ return 1
 
 @test "gabr can change default functionality with GABR_DEFAULT/default" {
     source ./gabr.sh
-    local normalOutput="$(gabr 2>&1)"
-    echo failed-normalOutput="\"${normalOutput}\"" 1>&2
-    [ -n "$normalOutput" ]
+    run gabr
+    normalOutput=$output
+    debug
+    ! [ "${output##*gabr\:}" = "${output}" ]
     GABR_DEFAULT=help
-    local helpOutput="$(gabr 2>&1)"
-    echo failed-helpOutput="\"${helpOutput}\"" 1>&2
+    run gabr
+    helpOutput=$output
+    debug
     [ "$helpOutput" = "$normalOutput" ]
-    local helpDirectCallOutput="$(gabr help 2>&1)"
-    echo failed-helpDirectCallOutput="\"${helpDirectCallOutput}\"" 1>&2
+    run gabr
+    helpDirectCallOutput=$output
+    debug
     [ "$helpDirectCallOutput" = "$helpOutput" ]
     local help='some-string' # this will be used by variable indirection
-    local helpStringOutput="$(gabr 2>&1)"
-    echo failed-helpStringOutput="\"${helpStringOutput}\"" 1>&2
+    run gabr
+    helpStringOutput=$output
+    debug
     [ "$helpStringOutput" = "some-string" ]
     function help(){
         echo 'some-other-string'
     }
-    local helpFunctionOutput="$(gabr 2>&1)"
-    echo failed-helpFunctionOutput="\"${helpFunctionOutput}\"" 1>&2
+    run gabr
+    helpFunctionOutput=$output
+    debug
     [ "$helpFunctionOutput" = "some-other-string" ]
 }
 
@@ -122,8 +127,8 @@ return 1
     debug
     ! [ "${output##*Warning\:}" = "${output}" ]
     GABR_DEFAULT='hack'
-    declare hack="| echo hacked; eval exit 777; || echo hi && echo ho << exit 4"
-    run gabr
+    declare hack="echo hacked; >&2; | eval exit 777; || echo hi && echo ho << exit 4"
+    run gabr hack
     debug
     [ "${output}" = "${hack}" ]
 }

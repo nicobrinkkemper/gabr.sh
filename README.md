@@ -29,11 +29,10 @@ Let's illustrate that with a flowchart.
 
 ![Alt text](./Gabr.sh.svg)
 
-
-> This flow-chart doesn't show how errors are handled.
 > When a argument is neither a function, file or directory a warning will show and the process is stopped.
 > For this reason `set -- usage` runs only when the `gabr` function is called
 > without any arguments, or a directory is called without arguments.
+> Sourcing a file is a success, and thus `usage` will not be set.
 
 Let's illustrate further with a code example. 
 ```shell
@@ -84,7 +83,7 @@ Gabr defines the following local variables. These will be available in files sou
 | default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_DEFAULT`            	|
 | $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)              	|
 | usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
-| fn           	|       	| The called function                      	|                                     	|                                         	|
+| fn           	|       	| The called function                      	|                                     	    |                                     	    |
 | args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@}                    |
 | file        	|       	| The sourced file                       	|                                         	|                                         	|
 | dir          	|       	| The relative directory of the file     	| .                                      	| Wil be cd'd to before calling the function|
@@ -92,7 +91,6 @@ Gabr defines the following local variables. These will be available in files sou
 | fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
 
 > If you want to run `gabr` as a local function, try `. gabr`
-> or simple `. ./gabr.sh`.
 > This allows the `gabr` function to inherit local variables.
 
 ### Global variables
@@ -138,7 +136,7 @@ $ export GABR_DEBUG=true
 ### GABR_ROOT / root
 A global variable called `GABR_ROOT` may be used to influence the value of `root`. 
 `root` is used as a fall-back directory. The fall-back directory will be consulted
-when no other options are available.
+when no files or directories are available at it's current position.
 
 ```shell
 $ export GABR_ROOT=$(git rev-parse --show-toplevel)
@@ -148,6 +146,7 @@ $ export GABR_ROOT=$(git rev-parse --show-toplevel)
 ### GABR_DEFAULT / default
 A global variable called `GABR_DEFAULT` may be used to influence the value of `default`. 
 `default` may be used to change the namespace of the fall-back function.
+
 ```shell
 $ export GABR_DEFAULT=help
 ```
