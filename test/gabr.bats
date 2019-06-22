@@ -242,6 +242,6 @@ function bonito(){
     declare -x GABR_ROOT=${PWD}/jim
     source ./gabr.sh
     run gabr jim
-    # trap 'rm -rf jim' RETURN
+    trap 'rm -rf jim' RETURN
     [ "$output"  = 'jim willem bonito de wever' ]
 }
