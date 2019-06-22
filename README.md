@@ -32,9 +32,7 @@ Let's illustrate that with a flowchart.
 ![Alt text](./Gabr.sh.svg)
 
 > When a argument is neither a function, file or directory a warning will show and the process is stopped.
-> For this reason `set -- usage` runs only when the `gabr` function is called
-> without any arguments, or a directory is called without arguments.
-> Sourcing a file is a success, and thus `usage` will not be set.
+> 
 
 Let's illustrate further with a code example. 
 ```shell
