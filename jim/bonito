@@ -1,0 +1,7 @@
+local here3=$PWD
+#!/usr/bin/env bash
+function bonito(){
+    printf '%s ' "bonito" >&2
+    ! [ "$PWD" = "$here3" ] && return
+    printf "de wever" >&2
+}

@@ -65,16 +65,19 @@ function baa()(
     [ "$status" -eq 123 ]
 }
 
-@test "Gabr errors when a file exits or returns 1" {
+@test "Gabr errors when a file is not found" {
     source ./gabr.sh
     mkdir -p spooky
-    echo "\
-return 1
-" > spooky/spooky.sh
+    mkdir -p spooky/scary
     run gabr spooky
+    debug
+    [ "$status" -eq 1 ]
+    [ "${output##*\'spooky\'}" != "${output}" ]
+    run gabr spooky scary skeleton
     debug
     trap 'rm -rf ./spooky' RETURN
     [ "$status" -eq 1 ]
+    [ "${output##*\'skeleton\'}" != "${output}" ]
 }
 
 @test "gabr errors when a function is undefined" {
@@ -205,34 +208,40 @@ function whereru(){
 
 @test "Gabr can cd to directories and run files, recursively" {
     mkdir -p 'jim'
-    # since `jim` is not found, will jump to root, but it will step over 
-    # changing directory because the first arguments does not use positional args. This is intentionally weird
-    # but valid
+    # w/ root:  Below file/function will run in ./jim
+    # w/o root:  Below file will run in PWD and function will run in ./jim
     echo "\
+local here1=\$PWD
 function jim(){
-    printf '%s ' jim >&2
-    gabr jim/willem.sh willem
+    printf '%s ' \"jim\" >&2
+    ! [ \"\$PWD\" = \"\$here1\" ] && return
+    gabr willem
 }" > jim/jim.sh
-# since we recurse from jim to willem, below file will be called from jim directory
-# however it will have to cd back to root in order to call the argument `jim/willem.sh`
+# w/ root:  Below file/function will run in ./jim
+# w/ root:   Below file will run in PWD function will run in ./jim
 echo "\
-dir=\$(pwd)
+local here2=\$PWD
 function willem(){
-    printf '%s ' willem >&2
+    printf '%s ' \"willem\" >&2
+    ! [ \"\$PWD\" = \"\$here2\" ] && return
     gabr bonito
 }" > jim/willem.sh
-# When a file is sourced, `gabr` will not have cd'd to the file's location just yet.
-# That's why we can catch our location with `pwd`. Since dir will always be cd'd to,
-# before a function call, willem can call below file.
+# same as willem
 echo "\
+local here3=\$PWD
 #!/usr/bin/env bash
 function bonito(){
-    printf '%s ' bonito >&2
+    printf '%s ' \"bonito\" >&2
+    ! [ \"\$PWD\" = \"\$here3\" ] && return
     printf \"de wever\" >&2
 }" > jim/bonito
     source ./gabr.sh
     run gabr jim
     debug
-    trap 'rm -rf jim' RETURN
+    [ "$output"  = 'jim ' ]
+    declare -x GABR_ROOT=${PWD}/jim
+    source ./gabr.sh
+    run gabr jim
+    # trap 'rm -rf jim' RETURN
     [ "$output"  = 'jim willem bonito de wever' ]
 }

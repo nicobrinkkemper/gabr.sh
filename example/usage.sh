@@ -5,8 +5,8 @@
 source /dev/stdin << EOF
 $default() {
     local stack="${stack:-$(declare -F)}"
-    local fullCommand="${fullCommand:-"usage"}"
-    local -a bashsource=(${BASH_SOURCE[@]} ${fullCommand})
+    local fullCommand="gabr example"
+    local -a bashsource=(${BASH_SOURCE[@]} ${prevArgs[@]})
     echo "Usage: \
 \${fullCommand%*\ $default*}\
 \$(_usageFiles)\
@@ -32,7 +32,7 @@ function _usageScope(){ # Prints all functions added to scope by gabr
                 awk '! /^_/{print $0}' | # hide underscore prefixed
                 tr '\n' "|"
         );
-        if [ -n "${GABR_DEBUG:-}" ]; then
+        if [ -n "${GABR_DEBUG_MODE:-}" ]; then
             set -x
         fi
         if [ -n "${usageScope:-}" ] && [ ${#usageScope} -gt 1 ]; then

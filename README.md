@@ -10,16 +10,18 @@ $ source ./gabr.sh
 
 ### Install with git
 ```shell
-$ git clone https://github.com/nicobrinkkemper/gabr.sh.git gabr
+$ git clone --recursive https://github.com/nicobrinkkemper/gabr.sh.git gabr
 $ cd gabr
 $ npm link
 ```
+> The recursive flag is optional, allows you to run tests
 
 ### Install with npm
 ```shell
 $ npm install --save-dev gabr
 $ npm link gabr
 ```
+> If you want to run `gabr` as a local function, try `. gabr`
 
 ## What is gabr.sh
 Gabr is a Bash function designed to call other Bash functions.
@@ -75,23 +77,20 @@ $ gabr git deleteTag 1.0.1
 
 ## Variables
 ### Local variables
-Gabr defines the following local variables. These will be available in files sourced by Gabr. Variables that already exist will be inherited.
+Gabr defines the following local variables.
 
 | variable     	| type  	| description                              	| default                                	| Note                                    	|
 |--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
-| root         	|       	| The fallback directory                   	| $PWD                                   	| May be set by `GABR_ROOT`    	            |
-| default      	|       	| Name of fallback function                	| usage                                  	| May be set by `GABR_DEFAULT`            	|
+| default      	|       	| Name of fallback namespace              	| usage                                  	| May be set by `GABR_DEFAULT`            	|
+| usage        	|       	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)              	|
-| usage        	| -A    	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | fn           	|       	| The called function                      	|                                     	    |                                     	    |
-| args         	| -a    	| The arguments for the function           	| ()                                     	| Also available as ${@}                    |
-| file        	|       	| The sourced file                       	|                                         	|                                         	|
+| args         	| -a    	| The left-over arguments                   | ()                                     	| Available as ${@} in target files/functions|
+| prevArgs      | -a    	| The successful arguments                  | ()                                     	|                                           |
+| file        	|       	| The sourced file                       	|                                         	| Will be unset after file is sourced   	|
 | dir          	|       	| The relative directory of the file     	| .                                      	| Wil be cd'd to before calling the function|
 | ext          	|       	| The extension to use       	            | .sh                                      	| Gabr also looks for files without extension|
-| fullCommand  	|       	| The full initial command as string        | gabr ${@}                               	| Handy for custom `usage` implementations. See `./example/usage.md` |
-
-> If you want to run `gabr` as a local function, try `. gabr`
-> This allows the `gabr` function to inherit local variables.
+| FUNCNEST     	|       	| See manual ([reference](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html)) | 50 | Prohibits overly recursive function calls
 
 ### Global variables
 ### GABR_STRICT_MODE (default:on)
@@ -125,49 +124,51 @@ To opt-out of strict-mode:
 $ export GABR_STRICT_MODE=off
 ```
 
-### GABR_DEBUG
+### GABR_DEBUG_MODE
 Setting this variable to a value will turn on debug mode for files and functions.
 The `gabr` function will do `set -x` before and `set +x` after every
 file source and function call.
 ```shell
-$ export GABR_DEBUG=true
+$ export GABR_DEBUG_MODE=true
 ```
 
-### GABR_ROOT / root
-A global variable called `GABR_ROOT` may be used to influence the value of `root`. 
-`root` is used as a fall-back directory. The fall-back directory will be consulted
-when no files or directories are available at it's current position.
+This variable is useful, because it omits `gabr` debug info from polluting a users code.
 
+### GABR_ROOT / root
+If `GABR_ROOT` is set to a value the `gabr` function will change directory
+to this location on every invocation.
 ```shell
 $ export GABR_ROOT=$(git rev-parse --show-toplevel)
 ```
-> This will make files at the root of a git repository available from anywhere
+> This will make files at the root of a git repository accessible to the `gabr` function
 
-### GABR_DEFAULT / default
-A global variable called `GABR_DEFAULT` may be used to influence the value of `default`. 
-`default` may be used to change the namespace of the fall-back function.
+This variable is powerful, it will make arguments put in more likely to result
+in the same output. Keep in mind that the `gabr` function will lose it's flexibility,
+it will always run from a fixed location.
+
+### GABR_DEFAULT
+A global variable called `GABR_DEFAULT` may be used to influence the default namespace. 
+By default this namespace is `usage`. The default namespace is consulted when no other options are found. 
+If neither a default function nor a default file is found, a default function will be generated. (see [functions](#Functions))
 
 ```shell
-$ export GABR_DEFAULT=help
+$ export GABR_DEFAULT=index
 ```
-> This will change `usage` to `help`. Also see [functions](#Functions)
+> This will make `index.sh` behave similar to index-files in other programming languages.
+
+This variable is useful, but the default value `usage` is probably the way to go. 
 
 ## Functions
 
 ### function usage ()
-What's a good loop without a good exit case? If no arguments were given to `gabr`, there must still be something
-it can do. Exactly, it will look for a function called usage. It will do this like it would do for any other function.
-First the function check, then file, then directory. If even that fails, a last-resort function
-will be generated:
+If all else fails, a last-resort function will be generated. By default it's this
+snippet.
 ```bash
 local usage="gabr [directory | file] function [arguments] -- A function to call other functions."
 function usage() {
     echo $usage >&2
 }
 ```
-> A example of extending usage behavior is given in [example/usage.sh](./example/usage.sh)
-> but could be improved upon.
-
 If a file is sourced that doesn't contain a function with the same name.
 The following snippet could benefit end-users.
 
@@ -192,6 +193,8 @@ function usage(){
 The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`.
 If `default` is not set to `usage`, `gabr` generates a last-resort function and variable for this name instead.
 This is done through variable indirection. ([reference](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html))
+To generate a function with a dynamic name a small eval trick is used. For this reason
+the default variable may not contain special-characters.
 
 In most cases, the following snippet would suffice for files that don't contain a function
 with the same name:
@@ -203,7 +206,7 @@ otherUsage(){
     "help-info-for-this-file"
 }
 ```
-But you can take it further
+But you can take it further by changing `gabr`'s default variable.
 ```bash
 if [ $# -eq 0 ]; then
     default=otherUsage
@@ -211,26 +214,7 @@ if [ $# -eq 0 ]; then
     set -- $default
 fi
 ```
-And even further with globals.
-```shell
-$ export GABR_DEFAULT=index
-$ mkdir -p example_default
-$ echo "\
-index(){
-    find *.sh
-}
-" > ./example/index.sh
-```
-
-
-```bash
-if [ $# -eq 0 ]; then
-    default=otherUsage
-    otherUsage="help-info-for-this-file"
-    set -- $default
-fi
-```
-
+> This will print `$otherUsage` inside a generated function
 
 
 ## Flags
