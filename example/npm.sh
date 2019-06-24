@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-if ! type -t git; then
+if ! whereis git; then
     echo "Warning: git is not available" 1>&2
     return 1
 fi
-if ! type -t node; then
+if ! whereis node; then
     echo "Warning: node is not available" 1>&2
     return 1
 fi
