@@ -30,9 +30,7 @@ Let's illustrate that with a flowchart.
 
 ![Alt text](./Gabr.sh.svg)
 
-> Sidenote:
->
-> When a argument is neither a function, file or directory a warning will show and the process is stopped. When the last argument is a directory and not a file or function name, a warning will show and the process is stopped. The exception to the above rule is when a directory contains a `usage` file. Finally, the arguments could be mutated during a file source.
+When a argument is neither a function, file or directory a warning will show and the process is stopped. When the last argument is a directory and not a file or function name, a warning will show and the process is stopped. The exception to the above rule is when a directory contains a `usage` file. Finally, the arguments could be mutated during a file source.
 
 Let's illustrate further with a code example. 
 ```shell
@@ -177,7 +175,7 @@ If neither a default function nor a default file is found, a default function wi
 ```shell
 $ export GABR_DEFAULT=index
 ```
-> This will make `index.sh` behave similar to index-files in other programming languages.
+> This will make `index.sh` behave similar to index-files in other programming languages
 
 This variable is useful, but the default value `usage` is probably the way to go. 
 
@@ -260,4 +258,4 @@ fi
 
 ## Flags
 
-Gabr does not require any flags. Gabr stops on any argument that starts with a dash (-).
+The internal loop wil stop at any argument that starts with a dash (-).
