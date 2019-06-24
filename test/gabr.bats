@@ -30,7 +30,7 @@ function saybye(){
     printf %s bye
 }" > ./sayhi.sh
     source ./gabr.sh
-    local result="$(gabr ./sayhi.sh sayhi) $(gabr ./sayhi.sh) $(gabr sayhi) $(gabr ./sayhi.sh saybye)"
+    local result="$(gabr ./sayhi sayhi) $(gabr ./sayhi) $(gabr sayhi) $(gabr ./sayhi saybye)"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./sayhi.sh' RETURN
     [ "$result"  = 'sourcedhi sourced sourcedhi sourcedbye' ]
@@ -71,11 +71,13 @@ function baa()(
     mkdir -p spooky/scary
     run gabr spooky
     debug
+    output=${output}
     [ "$status" -eq 1 ]
     [ "${output##*\'spooky\'}" != "${output}" ]
     run gabr spooky scary skeleton
     debug
     trap 'rm -rf ./spooky' RETURN
+    output=${output}
     [ "$status" -eq 1 ]
     [ "${output##*\'skeleton\'}" != "${output}" ]
 }
@@ -235,7 +237,7 @@ function bonito(){
     source ./gabr.sh
     run gabr jim
     debug
-    [ "$output"  = 'jim ' ]
+    [ "$output"  = 'jim willem bonito de wever' ]
     declare -x GABR_ROOT=${PWD}/jim
     source ./gabr.sh
     run gabr jim

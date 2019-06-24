@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
-
-if [[ $# -eq 0 ]]; then
-    set  -- usage
+if ! type -t git; then
+    echo "Warning: git is not available" 1>&2
+    return 1
 fi
-if [ "${1:-usage}" = 'usage' ]; then
-    dir=$(git rev-parse --show-toplevel) # functions target root directory
+if ! type -t node; then
+    echo "Warning: node is not available" 1>&2
+    return 1
 fi
-
+declare version="$(node -p -e "require('./package.json').version")"
+declare name="$(node -p -e "require('./package.json').name")"
+declare npmRoot="$(git rev-parse --show-toplevel)"
 function release() { # [ message ] - Release with a message
+    cd $npmRoot
     git add . || 'Nothing to add'
     git commit -m ${1:-"New release will bump ${version:-}"} || 'Nothing to commit'
+    git push
     npm test;
     npm run release;
 }
 
 function deprecate() { # [version] -- deprecate a version
+    cd $npmRoot
     if [[ $# -eq 0 ]]; then
         echo "\
 Usage: deprecate [version] [message] -- e.g. deprecate 0.0.2 no long need it
@@ -27,13 +33,3 @@ Usage: deprecate [version] [message] -- e.g. deprecate 0.0.2 no long need it
     local reason="${@}"
     npm deprecate ${name}@${version} ${reason:-"${version} is no longer supported"}
 }
-
-if ! command node; then
-    echo "Warning: node is not available" 1>&2
-fi
-if [ -z "${version:-}" ]; then
-    declare version=$(node -p -e "require('./package.json').version")
-fi
-if [ -z "${name:-}" ]; then
-    declare name=$(node -p -e "require('./package.json').name")
-fi

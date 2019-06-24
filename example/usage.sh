@@ -2,15 +2,28 @@
 # @file usage.sh
 #
 # @brief  Usage.sh contains a example on how to reimplement the usage behavior of gabr.
+set +x
+declare stack="$(declare -f -F)" # start keeping count of stack (usage.sh will do difference check)
+if [ -n "${GABR_DEBUG_MODE:-}" ]; then
+    set -x
+fi
+if [ $# -eq 0 ]; then
+    set -- usage
+fi
+if ! [ "$1" = 'usage' ]; then
+    declare usageFiles="" # disable file listing for arguments after 'example'
+fi
+
+
 usage() {
+    set +x
+    if [ $# -eq 0 ]; then
+        set -- ${prevArgs[@]:-}
+    fi
     local stack="${stack:-$(declare -F)}"
-    local fullCommand="gabr example"
-    local -a bashsource=(${BASH_SOURCE[@]} ${prevArgs[@]})
-    echo "Usage: \
-${prevArgs[@]:0:$(( ${#prevArgs[@]} - 2 ))}\
-$(_usageFiles)\
-$(_usageScope)\
-${example:-}" >&2
+    local -a bashsource=(${BASH_SOURCE[@]} ${@})
+    local fullCommand="$(IFS=' '; echo ${@##*usage})" # strip 'usage' of $@
+    echo "Usage: ${fullCommand}$(_usageFiles)$(_usageScope) ${example:-}" >&2
 }
 
 function _filename(){

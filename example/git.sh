@@ -2,11 +2,9 @@
 # @file git.sh
 #
 # @brief  Git.sh contains some one-off git functions. To serve as example.
-if [ $# -eq 0 ]; then
-    set  -- usage
-fi
+
 if ! [ "${1:-usage}" = 'usage' ]; then
-    dir=$(git rev-parse --show-toplevel) # functions target root directory
+    cd $(git rev-parse --show-toplevel) # functions target root directory
 fi
 if [ -z "${remote:-}" ]; then
     declare remote="$(git remote)"

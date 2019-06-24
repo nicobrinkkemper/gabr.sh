@@ -30,7 +30,7 @@ Let's illustrate that with a flowchart.
 
 ![Alt text](./Gabr.sh.svg)
 
-When a argument is neither a function, file or directory a warning will show and the process is stopped. When the last argument is a directory and not a file or function name, a warning will show and the process is stopped. The exception to the above rule is when a directory contains a `usage` file. Finally, the arguments could be mutated during a file source.
+This flowchart does not contain all cases. When a argument is neither a function, file or directory a warning will show and the process is stopped. When the last argument is a directory and not a file or function name, a warning will show and the process is stopped. The exception to the above rule is when a directory contains a `usage` file. Finally, the arguments could be mutated during a file source (with the `set` builtin).
 
 Let's illustrate further with a code example. 
 ```shell
@@ -50,7 +50,7 @@ Hello World.
 > By naming the file and the function hello,
 > a tiny API emerged to call the function.
 
-A different aproach would be:
+A different approach would be:
 ```shell
 $ echo "\
 if [ \$# -eq 0 ]; then
@@ -64,6 +64,8 @@ function world() {
 }
 " > ./hello.sh
 $ gabr hello
+Usage: gabr hello world
+$ gabr hello usage
 Usage: gabr hello world
 $ gabr hello world
 Hello World.
@@ -115,7 +117,7 @@ Gabr defines the following local variables.
 | FUNCNEST     	|       	| See manual ([reference](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html)) | 50 | Prohibits overly recursive function calls
 
 ### Global variables
-### GABR_STRICT_MODE (default:on)
+### GABR_STRICT_MODE (default:true)
 A global variable called `GABR_STRICT_MODE` may be used to toggle the following snippet:
 ```bash
 set -eEuo pipefail

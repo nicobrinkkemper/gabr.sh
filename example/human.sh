@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-if [ $# -eq 0 ]; then
-   set  -- usage
-fi
 
 function laugh() { # -- e.g. gabr example human laugh
     echo ":D" >&2

@@ -22,7 +22,8 @@ function gabr() {  # A function to run other functions
     local default=${GABR_DEFAULT:-usage} 
     local fn file dir
     local -a args=()
-    local -a prevArgs=()
+    local -A files=()
+    local -a prevArgs=($FUNCNAME)
     local ext=${GABR_EXT:-'.sh'}
     # usage
     if ! [[ -v usage ]]; then
@@ -42,7 +43,7 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
     fi
     # arguments
 ( # @enter subshell
-    if [[ -v GABR_ROOT ]] && ! [[ $GABR_ROOT = $PWD ]]; then
+    if [[ -v GABR_ROOT ]]; then
         cd $GABR_ROOT
     fi
     if [[ ${GABR_STRICT_MODE:-true} = true ]]; then
@@ -54,6 +55,7 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
     ! [[ -v prevArgs ]] && local -a prevArgs=()
     # helpers
     _isFn(){    [[ $(type -t $fn) = function ]]; }
+    _canSource(){ ! [[ -v files[$file] ]] || ! [[ ${files[$file]} = $file ]]; }
     _isDebug(){ [[ -v GABR_DEBUG_MODE ]]; }
     # begin processing arguments
     if [ $# -eq 0 ]; then
@@ -63,48 +65,48 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
     do
         fn=${1}
         if [[ ${fn::1} = - ]]; then # disallow dash
-            break
+            prevArgs+=($1)
+            shift
+            if ! [ $# -eq 0 ]; then
+                printf $'\033[0;91m'"!: "%s$'\033[0m\n' "${@}" 1>&2
+            fi
+            return 1
         elif _isFn; then # call a function
             prevArgs+=($1)
             shift
             args=(${@:-})
-            cd ${dir:-.}
             _isDebug && set -x
             ${fn} ${@:-}; # call the function
             _isDebug && set +x
             break
-        elif [[ -v file ]]; then # source a file
+        elif [[ -f ./${fn}${ext} ]]; then # allow a file with extension
+            file=${fn}${ext}
+            if ! _canSource; then
+                set -- '-' "'$file' is already sourced by argument $fn" 1>&2
+                continue
+            fi
+            files+=([$file]=$file)
             if ! [ -r "${file:-}" ]; then
-                printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$file' is not a readable file" 1>&2
-                return 1
+                set -- '-' "'$file' is not a readable file" 1>&2
+                continue
             fi
             prevArgs+=($1)
             shift
             args=(${@:-})
-            if ! [[ ${file##*${ext}} = $file ]]; then
-                _isDebug && set -x
-                . $file # source the file
-                _isDebug && set +x
-            else
-                exec $file $@ # run the file
-            fi
-            unset file
-            _isFn && set -- $fn ${@:-} && continue # continue because a function is found
-        elif [[ -f ${dir:-.}/${fn}${ext} ]]; then # allow a file with extension
-            file=${dir:-.}/${fn}$ext
-        elif [[ -f ${dir:-.}/${fn} ]]; then # allow a file without extension
-            file=${dir:-.}/$fn
-        elif [[ -d ${dir:-.}/${fn} ]]; then # allow a directory
-            dir=${dir:-.}/$fn
-        elif [[ -v dir ]]; then # don't allow directory with nothing to do
-            ! [ $# -eq 1 ] && shift && continue
-            printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$fn' could not be used in directory $dir" 1>&2
-            return 1
-        elif [[ -f ${dir:-.}/${default}${ext} ]]; then # allow a usage file with extension
-            file=${dir:-.}/${default}$ext
-            continue
-        elif [[ -f ${dir:-.}/${default} ]]; then # allow a usage file without extension
-            file=${dir:-.}/$default
+             _isDebug && set -x
+            . ${fn}${ext} # source the file
+            _isDebug && set +x
+            _isFn && set -- $fn ${@:-}
+            [ $# -eq 0 ] && set -- ${default} ${prevArgs[@]}
+        elif [[ -f ./${fn} ]]; then # allow a file without extension
+            prevArgs+=($1)
+            shift
+            args=(${@:-})
+            exec ${fn} $@ # execute the file
+            break
+        elif [[ -d ./${fn} ]]; then # allow a directory
+            cd ./$fn
+            dir=./$fn
         elif [[ ${fn} = usage ]]; then # allow a generated usage function
             usage() {
                 echo $usage >&2
@@ -116,11 +118,20 @@ $default() {
 }
 EOF
             _isFn && continue
-            printf $'\033[0;91m'"Crash: "%s$'\033[0m\n' "Could not generate default function" 1>&2
-            return 1
+            set -- '-' "Could not generate default function"
+        elif [ $# -gt 1 ]; then # shift arguments
+            prevArgs+=($1)
+            shift
+        elif [ $# -eq 1 ] && [[ -f ./${default}${ext} ]] && [[ ${dir:-.} = ./$fn ]]; then
+            prevArgs+=($1)
+            set -- ${default:-usage} ${prevArgs[@]}
+        elif [ $# -eq 1 ] && ! [[ ${#files[@]} -eq 0 ]]; then
+            set -- '-' "\
+'$fn' could not be used to call a function in file(s): $(echo ${!files[@]})"
+        elif [ $# -eq 1 ] && [[ -v dir ]]; then
+            set -- '-' "'$fn' could not be used to call a function in directory $dir"
         else
-            printf $'\033[0;91m'"Warning: "%s$'\033[0m\n' "'$fn' could not be used as file, function or directory" 1>&2
-            return 1
+            set -- '-'  "'$fn' could not be used as file, function or directory"
         fi
     done
     return;
