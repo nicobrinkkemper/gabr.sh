@@ -84,9 +84,13 @@ ${FUNCNAME} ${prevArgs[@]} [directory | file] function [arguments] -- A function
             prevArgs+=($1)
             shift
             args=(${@:-})
-            _isDebug && set -x
-            . $file # source the file
-            _isDebug && set -x
+            if ! [ "${file##*${ext}}" = "$file" ]; then
+                _isDebug && set -x
+                . $file # source the file
+                _isDebug && set +x
+            else
+                exec $file $@ # run the file
+            fi
             unset file
             _isFn && set -- $fn ${@:-} && continue # continue because a function is found
         elif [ -f "${dir:-.}/${fn}${ext}" ]; then # allow a file with extension

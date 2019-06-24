@@ -106,21 +106,18 @@ function baa()(
     debug
     [ "$helpOutput" = "$normalOutput" ]
     run gabr
-    helpDirectCallOutput=$output
     debug
-    [ "$helpDirectCallOutput" = "$helpOutput" ]
+    [ "$output" = "$helpOutput" ]
     local help='some-string' # this will be used by variable indirection
     run gabr
-    helpStringOutput=$output
     debug
-    [ "$helpStringOutput" = "some-string" ]
+    [ "$output" = "some-string" ]
     function help(){
         echo 'some-other-string'
     }
     run gabr
-    helpFunctionOutput=$output
     debug
-    [ "$helpFunctionOutput" = "some-other-string" ]
+    [ "$output" = "some-other-string" ]
 }
 
 @test "gabr can't be abused to execute malicious code through GABR_DEFAULT" {
@@ -234,7 +231,7 @@ function bonito(){
     printf '%s ' \"bonito\" >&2
     ! [ \"\$PWD\" = \"\$here3\" ] && return
     printf \"de wever\" >&2
-}" > jim/bonito
+}" > jim/bonito.sh
     source ./gabr.sh
     run gabr jim
     debug

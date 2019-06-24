@@ -4,18 +4,33 @@
 # @brief  Git.sh contains some one-off git functions. To serve as example.
 if [ $# -eq 0 ]; then
     set  -- usage
-
+fi
 if ! [ "${1:-usage}" = 'usage' ]; then
     dir=$(git rev-parse --show-toplevel) # functions target root directory
 fi
+if [ -z "${remote:-}" ]; then
+    declare remote="$(git remote)"
+fi
+if [ -z "${branch:-}" ]; then
+    declare branch
+    branch="$(git symbolic-ref HEAD 2>/dev/null)" || branch="undefined"
+    branch=${branch##refs/heads/}
+fi
+
+# @description Updates content of /modules
+# @example
+#   $ gabr example git pullSubmodules
+#   master
+function pullSubmodules() {
+    git submodule update --init --recursive
+}
+
+
 # @description Gets the current branch
 # @example
 #   $ gabr example git currentBranch
 #   master
 function currentBranch() {
-    local branch
-    branch="$(git symbolic-ref HEAD 2>/dev/null)" || branch="undefined"
-    branch=${branch##refs/heads/}
     echo $branch
 }
 
@@ -93,10 +108,3 @@ function renameTag() {
     git push origin :refs/tags/$1
     git push --tags
 }
-
-if [ -z "${branch:-}" ]; then
-    declare branch="$(currentBranch)"
-fi
-if [ -z "${remote:-}" ]; then
-    declare remote="$(git remote)"
-fi

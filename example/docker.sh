@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 3 ]; then
-local -A versions=(
+declare -A versions=(
     ["3.2"]="3.2"
     ["4.0"]="4.0"
     ["4.1"]="4.1"
@@ -27,24 +27,23 @@ fi
 # Implement usage.md
 if [[ $# -eq 0 ]]; then
     set  -- usage
-    local usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
+    declare usageFiles=" [$( echo ${!versions[@]} | tr ' ' '|')]"
 else
-    declare dir=$(git rev-parse --show-toplevel) # functions target root directory
+    # functions target root directory
+    declare dir=$(git rev-parse --show-toplevel) 
+    # Run all versions when non given
+    if ! [[ -v bashvers ]]; then
+        echo "# Running for all versions" >&2
+        bashvers=(${!versions[@]})
+    fi
+    # Check for WSL
+    case "$(cat /proc/version)" in
+        *Microsoft*)
+            echo "# Asumed Windows Subsystem for Linux" >&2
+            rootVolume=$(wslpath -w ${rootVolume})
+            ;;
+    esac
 fi
-
-# Run all versions when non givens
-if ! [[ -v bashvers ]]; then
-    echo "# Running for all versions" >&2
-    bashvers=(${!versions[@]})
-fi
-
-# Check for WSL
-case "$(cat /proc/version)" in
-    *Microsoft*)
-        echo "# Asumed Windows Subsystem for Linux" >&2
-        rootVolume=$(wslpath -w ${rootVolume})
-        ;;
-esac
 
 function build()( # -- e.g. docker 3.2 build
     if [ $# -ne 0 ]; then  bashvers=${@}; fi
@@ -70,6 +69,7 @@ function buildtest(){ # -- e.g. docker 3.2 buildtest
     test $@;
 }
 else
+    echo $BASH_VERSION
     echo "To use ${BASH_SOURCE}, please update Bash to 4.3+" 1>&2
-    (exit 1)
+    return
 fi

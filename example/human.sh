@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ $# -eq 0 ]; then
-    set  -- usage
+   set  -- usage
 fi
 
 function laugh() { # -- e.g. gabr example human laugh

@@ -2,18 +2,16 @@
 # @file usage.sh
 #
 # @brief  Usage.sh contains a example on how to reimplement the usage behavior of gabr.
-source /dev/stdin << EOF
-$default() {
+usage() {
     local stack="${stack:-$(declare -F)}"
     local fullCommand="gabr example"
     local -a bashsource=(${BASH_SOURCE[@]} ${prevArgs[@]})
     echo "Usage: \
-\${fullCommand%*\ $default*}\
-\$(_usageFiles)\
-\$(_usageScope)\
-\${example:-}" >&2
+${prevArgs[@]:0:$(( ${#prevArgs[@]} - 2 ))}\
+$(_usageFiles)\
+$(_usageScope)\
+${example:-}" >&2
 }
-EOF
 
 function _filename(){
     local filename=${1:-$BASH_SOURCE}
@@ -52,9 +50,9 @@ function _usageFiles(){
         local usageFiles=$(
             IFS=' '
             ! find . -maxdepth 1 ${findString} -name '*'${ext:-.sh} |
-                cut -c3- | 
+                cut -c3- | # cut ./
                 rev      | 
-                cut -c4- | 
+                cut -c4- | # cut .sh
                 rev      |
                 awk '!/^\./{ print $0 }' | # hide dot prefixed
                 tr '\n' "|"
