@@ -7,9 +7,9 @@ if ! type -t node; then
     echo "Warning: node is not available" 1>&2
     return 1
 fi
-declare version="$(node -p -e "require('./package.json').version")"
-declare name="$(node -p -e "require('./package.json').name")"
 declare npmRoot="$(git rev-parse --show-toplevel)"
+declare name="$(node -p -e "require('${npmRoot}/package.json').name")"
+declare version="$(node -p -e "require('${npmRoot}/package.json').version")"
 function release() { # [ message ] - Release with a message
     cd $npmRoot
     git add . || 'Nothing to add'
