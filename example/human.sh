@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 function laugh() { # -- e.g. gabr example human laugh
     echo ":D" >&2
     return

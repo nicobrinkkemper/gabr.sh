@@ -188,7 +188,7 @@ Arguments received: 3
 ```
 
 ### Local variables
-Gabr defines the following local variables.
+Gabr defines the following local variables. These will be defined in sourced files.
 
 | variable     	| type  	| description                              	| default                                	| Note                                    	|
 |--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
@@ -196,7 +196,7 @@ Gabr defines the following local variables.
 | usage        	|       	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
 | $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)              	|
 | fn           	|       	| The called function                      	|                                     	    |                                     	    |
-| args         	| -a    	| The left-over arguments                   | ()                                     	| Available as ${@} in target files/functions|
+| args         	| -a    	| The left-over arguments                   | ()                                     	| Available as ${@} in sourced files/functions|
 | prevArgs      | -a    	| The successful arguments                  | ()                                     	|                                           |
 | file        	|       	| The sourced file                       	|                                         	| Will be set to the latest sourced file    |
 | dir          	|       	| The directory of the file     	        | .                                      	| Will be relative path from starting point |
@@ -229,12 +229,8 @@ fi
 ```
 
 This can be useful for filenames that may not contain a function with that name.
-For example see `./example/git.sh`. It contains some functions I used for maintenance
-on this repo. A function called `git` would be disastrous here, and anywhere else for
-that matter.
-
-A alternative approach would be to just define the default function. If a default function
-is defined, it will be called if no arguments are given after the file argument.
+A alternative approach would be to just define the `usage` function.
+It will be called if no arguments are given after the file argument.
 
 ```bash
 usage(){
@@ -243,8 +239,8 @@ usage(){
 }
 ```
 
-Finally, a default file may be made. This file will be consulted when the
-a argument is a directory but not a file. For a example of this, see `./test/usage.md`
+Finally, a default file may be consulted when the
+a argument is a directory but not a file. For a example of this, see `./test/usage.sh`
 or run `gabr test` to see it in action.
 
 ### function $default ()
@@ -265,7 +261,7 @@ help(){
 ## Flags
 
 The internal loop wil error at any argument that starts with a dash (-).
-Any argument that comes behind the dash will be printed to screen as
+Any argument that comes behind the dash will be printed as
 a warning to the user.
 ```
 set -- '-' 'Error, something went wrong'
