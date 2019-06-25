@@ -54,9 +54,6 @@ Hello World.
 A different approach would be:
 ```shell
 $ echo "\
-if [ \$# -eq 0 ]; then
-    set -- usage
-fi
 function usage() {
   printf '%s' 'Usage: gabr hello world'
 }
