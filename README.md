@@ -71,14 +71,15 @@ Hello World.
 > See [functions](#Functions) for a different variation of this
 
 ## Why use gabr.sh?
+Use it when you want to write a lot of Bash functions.
 Consider the following commands to delete a tag with git:
 ```shell
 git tag -d 1.0.1
 git push origin :refs/tags/1.0.1
 ```
-I'll be honest to myself and say I won't remember this next time.
+This is hard to remember next time you'd need it.
 Besides I have a lot of tags to delete.
-I can just write a quick function.
+Now consider the following function.
 ```bash
 set -eu
 function deleteTag() {
@@ -88,14 +89,20 @@ function deleteTag() {
 ```
 > Let's say it's saved in `./git.sh`
 
-To run this like `gabr` would, one could simply write:
+This is easy to forget too, but one can refresh memory by looking at the file.
+
+To run this function like `gabr` would, one could simply write:
 ```shell
 $ (. git.sh; deleteTag 1.0.1)
 ```
-But doing it like this is hard to communicate and prone to human error. With `gabr` a more direct API emerges to do these kind of things:
+But doing it like this is hard to communicate and prone to human error.
+With `gabr` a more direct api emerges to do these kind of things:
 ```
 $ gabr git deleteTag 1.0.1
 ```
+With this basic concept, all functions you see in .sh files
+will be available through a simple api that is shareable.
+
 
 ## Variables
 
