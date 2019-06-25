@@ -103,15 +103,17 @@ function baa()(
     debug
     ! [ "${output##*gabr\:}" = "${output}" ]
     GABR_DEFAULT=help
-    cp ./usage.sh ./help.sh
+    source ./usage.sh
+    declare usageFn="$(declare -f usage)"
+    unset usage;
+    echo "help()${usageFn##*usage\ \(\)}" > ./help.sh
     run gabr
     helpOutput=$output
     debug
-   # trap 'rm -f ./help.sh' RETURN
+    rm -f ./help.sh
     [ "$helpOutput" = "$normalOutput" ]
     run gabr
-    debug
-    [ "$output" = "$helpOutput" ]
+    [ "$output" != "$normalOutput" ]
     local help='some-string' # this will be used by variable indirection
     run gabr
     debug
