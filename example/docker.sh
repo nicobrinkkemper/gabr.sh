@@ -15,7 +15,7 @@ declare _rootVolume=$(git rev-parse --show-toplevel)
 declare -a bashvers=(${!versions[@]})
 declare example="[$( echo ${!versions[@]} | tr ' ' '|')]
 Example: gabr example buildtest 3.2
-Note: Running without version argument will run all version (and takes a while)"
+Note: Running without version argument will run all versions (and takes a while)"
 
 
 function _supportWsl(){ # -- Converts unix to windows path with `wslpath`
@@ -27,7 +27,7 @@ function _supportWsl(){ # -- Converts unix to windows path with `wslpath`
     esac
 }
 
-function _supportedVersions(){ # -- Assigns version arguments to the 'bashvers' array
+function _bashvers(){ # -- Assigns version arguments to the 'bashvers' array
     if [ $# -eq 0 ]; then
         echo "# ${FUNCNAME[1]} versions: '$( echo ${bashvers[@]} | tr ' ' '|')'" >&2;
         return
@@ -44,7 +44,7 @@ function _supportedVersions(){ # -- Assigns version arguments to the 'bashvers' 
 
 function build()( # build a docker image for a Bash version to test with bats -- e.g. build 3.2
     cd $_rootVolume
-    _supportedVersions ${@}
+    _bashvers ${@}
     set -- ${bashvers[@]}
     for bashver in ${@}
     do
@@ -54,7 +54,7 @@ function build()( # build a docker image for a Bash version to test with bats --
 )
 
 function test()( # test a Bash version with a docker image build with build -- e.g. test 3.2
-    _supportedVersions ${@}
+    _bashvers ${@}
     set -- ${bashvers[@]}
     _supportWsl
     for bashver in ${@} 
@@ -68,7 +68,7 @@ function test()( # test a Bash version with a docker image build with build -- e
 )
 
 function buildtest(){ # -- e.g. buildtest 3.2
-    _supportedVersions ${@}
+    _bashvers ${@}
     build
     test
 }

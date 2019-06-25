@@ -100,25 +100,10 @@ $ gabr git deleteTag 1.0.1
 ```
 
 ## Variables
-### Local variables
-Gabr defines the following local variables.
 
-| variable     	| type  	| description                              	| default                                	| Note                                    	|
-|--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
-| default      	|       	| Name of fallback namespace              	| usage                                  	| May be set by `GABR_DEFAULT`            	|
-| usage        	|       	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
-| $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)              	|
-| fn           	|       	| The called function                      	|                                     	    |                                     	    |
-| args         	| -a    	| The left-over arguments                   | ()                                     	| Available as ${@} in target files/functions|
-| prevArgs      | -a    	| The successful arguments                  | ()                                     	|                                           |
-| file        	|       	| The sourced file                       	|                                         	| Will be unset after file is sourced   	|
-| dir          	|       	| The relative directory of the file     	| .                                      	| Wil be cd'd to before calling the function|
-| ext          	|       	| Extension to use `source`                 | .sh                                       | `exec` is used for files without this extension. |
-| FUNCNEST     	|       	| See manual ([reference](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html)) | 50 | Prohibits overly recursive function calls
-
-### Global variables
+### Variables
 ### GABR_STRICT_MODE (default:true)
-A global variable called `GABR_STRICT_MODE` may be used to toggle the following snippet:
+A variable called `GABR_STRICT_MODE` may be used to toggle the following snippet:
 ```bash
 set -eEuo pipefail
 local IFS=$'\n\t'
@@ -147,6 +132,7 @@ To opt-out of strict-mode:
 ```shell
 $ export GABR_STRICT_MODE=off
 ```
+> export is not needed when running as a local function
 
 ### GABR_DEBUG_MODE
 Setting this variable to a value will turn on debug mode for files and functions.
@@ -155,6 +141,7 @@ file source and function call.
 ```shell
 $ export GABR_DEBUG_MODE=true
 ```
+
 This variable is useful, because it omits `gabr` debug info from polluting a users code.
 
 ### GABR_ROOT / root
@@ -200,6 +187,22 @@ Arguments received: 3
 2 -> hello
 ```
 
+### Local variables
+Gabr defines the following local variables.
+
+| variable     	| type  	| description                              	| default                                	| Note                                    	|
+|--------------	|-------	|------------------------------------------	|----------------------------------------	|-----------------------------------------	|
+| default      	|       	| Name of fallback namespace              	| usage                                  	| May be set by `GABR_DEFAULT`            	|
+| usage        	|       	| Usage string                            	| "Usage: gabr [file] function..."         	|                                          	|
+| $default     	|       	| String printed by fallback function      	| $usage                                   	| See [Functions](#Functions)              	|
+| fn           	|       	| The called function                      	|                                     	    |                                     	    |
+| args         	| -a    	| The left-over arguments                   | ()                                     	| Available as ${@} in target files/functions|
+| prevArgs      | -a    	| The successful arguments                  | ()                                     	|                                           |
+| file        	|       	| The sourced file                       	|                                         	| Will be set to the latest sourced file    |
+| dir          	|       	| The directory of the file     	        | .                                      	| Will be relative path from starting point |
+| ext          	|       	| Extension to use `source`                 | .sh                                       | `exec` is used for files without extension|
+| FUNCNEST     	|       	| See manual ([reference](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html)) | 50 | Prohibits overly recursive function calls |
+
 ## Functions
 ### function usage ()
 By default `usage` is a important namespace for the `gabr` function. `usage` behaves
@@ -228,7 +231,21 @@ fi
 This can be useful for filenames that may not contain a function with that name.
 For example see `./example/git.sh`. It contains some functions I used for maintenance
 on this repo. A function called `git` would be disastrous here, and anywhere else for
-that matter. 
+that matter.
+
+A alternative approach would be to just define the default function. If a default function
+is defined, it will be called if no arguments are given after the file argument.
+
+```bash
+usage(){
+    echo "npm test" >&2
+    npm test
+}
+```
+
+Finally, a default file may be made. This file will be consulted when the
+a argument is a directory but not a file. For a example of this, see `./test/usage.md`
+or run `gabr test` to see it in action.
 
 ### function $default ()
 The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`.
@@ -237,27 +254,19 @@ This is done through variable indirection. ([reference](https://www.gnu.org/soft
 To generate a function with a dynamic name a small eval trick is used. For this reason
 the `default` variable may not contain special-characters.
 
-In most cases, the following snippet would suffice for files that don't contain a function
-with the same name:
 ```bash
-if [ $# -eq 0 ]; then
-    set -- help
-fi
+default=help
 help(){
     printf "help-info-for-this-file"
 }
 ```
-But you can take it further by changing the `default` variable.
-```bash
-if [ $# -eq 0 ]; then
-    default=help
-    help="help-info-for-this-file"
-    set -- $default
-fi
-```
-> This will print `$help` inside a generated function
-
+> This will run the `help` function when no arguments come after a file argument
 
 ## Flags
 
-The internal loop wil stop at any argument that starts with a dash (-).
+The internal loop wil error at any argument that starts with a dash (-).
+Any argument that comes behind the dash will be printed to screen as
+a warning to the user.
+```
+set -- '-' 'Error, something went wrong'
+```

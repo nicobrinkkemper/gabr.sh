@@ -20,9 +20,10 @@ if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ] && [[ -r "${BA
     . "${BASH_SOURCE%\.sh*}.linux$([ "${BASH_SOURCE}" != "${BASH_SOURCE%\.sh*}" ] && echo .sh)"
 else
 function gabr() {  # A function to run other functions 
+    local fn file
     local FUNCNEST=50
     local default=${GABR_DEFAULT:-usage} 
-    local fn file dir
+    local dir=.
     local -a args=()
     local -a files=()
     local -a prevArgs=()
@@ -30,7 +31,7 @@ function gabr() {  # A function to run other functions
     # usage
     if [ -z "${usage:-}" ]; then
         local usage="\
-${FUNCNAME} ${prevArgs[@]} [directory | file] function [arguments] -- A function to call other functions.
+${prevArgs[@]} [directory | file] function [arguments] -- A function to call other functions.
 "
     fi
     # customize usage
@@ -55,7 +56,7 @@ ${FUNCNAME} ${prevArgs[@]} [directory | file] function [arguments] -- A function
     fi
     ! [ ${#prevArgs[@]} -eq 0 ] && local -a prevArgs=()
     # helpers
-    _isFn(){    [ "$(type -t ${fn})" = 'function' ]; }
+    _isFn(){    [ "$(type -t ${1:-$fn})" = 'function' ]; }
     _canSource(){ 
         for _file in ${files[@]:-}; do
             if [ $_file = $file ]; then
@@ -76,8 +77,10 @@ ${FUNCNAME} ${prevArgs[@]} [directory | file] function [arguments] -- A function
         if [ "${fn::1}" = '-' ]; then # disallow a dash
             prevArgs+=($1)
             shift
-            if ! [ $# -eq 0 ]; then
-                printf $'\033[0;91m'"!: "%s$'\033[0m\n' "${@}" 1>&2 # print everything after dash
+            if ! [ "${fn}" = '-' ]; then
+                printf $'\033[0;91m'"!: "%s$'\033[0m\n' "Illegal flag: ${fn}" 1>&2
+            elif ! [ $# -eq 0 ]; then
+                printf $'\033[0;91m'"!: "%s$'\033[0m\n' "${@}" 1>&2
             fi
             return 1
         elif _isFn; then # call a function
@@ -132,7 +135,7 @@ EOF
         elif [ $# -gt 1 ]; then # shift arguments
             prevArgs+=($1)
             shift
-        elif [ $# -eq 1 ] && [ -f "./${default}${ext}" ] && [ "${dir:-.}" = "./$fn" ]; then
+        elif [ $# -eq 1 ] && [ -f "./${default}${ext}" ] && [ "${dir: $(( -${#fn}-1 ))}" = "/$fn" ]; then
             prevArgs+=($1)
             set -- ${default:-usage} ${prevArgs[@]}
         elif [ $# -eq 1 ] && ! [ ${#files[@]} -eq 0 ]; then

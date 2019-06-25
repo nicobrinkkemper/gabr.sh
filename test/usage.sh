@@ -1,4 +1,5 @@
 # e.g. gabr test
 usage(){
-    echo "Usage: npm test"
+    echo "npm test" >&2
+    npm test
 }

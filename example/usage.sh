@@ -7,12 +7,6 @@ declare stack="$(declare -f -F)" # start keeping count of stack (usage.sh will d
 if [ -n "${GABR_DEBUG_MODE:-}" ]; then
     set -x
 fi
-if [ $# -eq 0 ]; then
-    set -- usage
-fi
-if ! [ "$1" = 'usage' ]; then
-    declare usageFiles="" # disable file listing for arguments after 'example'
-fi
 
 
 usage() {
@@ -47,7 +41,7 @@ function _usageScope(){ # Prints all functions added to scope by gabr
             set -x
         fi
         if [ -n "${usageScope:-}" ] && [ ${#usageScope} -gt 1 ]; then
-            usageScope=" [${usageScope:0: -1}]"
+            usageScope=" [${usageScope:0: -1}]" # strip last |
         fi
     fi
     echo "${usageScope:-}"
@@ -71,7 +65,7 @@ function _usageFiles(){
                 tr '\n' "|"
             );
         if [ -n "${usageFiles:-}" ] && [ ${#usageFiles} -gt 1 ]; then
-            usageFiles=" [${usageFiles:0: -1}]"
+            usageFiles=" [${usageFiles:0: -1}]" # strip last |
         fi
     fi
     echo "${usageFiles:-}"

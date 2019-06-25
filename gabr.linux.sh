@@ -18,9 +18,10 @@
 if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ]
 then
 function gabr() {  # A function to run other functions 
+    local fn file
     local FUNCNEST=50
     local default=${GABR_DEFAULT:-usage} 
-    local fn file dir
+    local dir=.
     local -a args=()
     local -A files=()
     local -a prevArgs=($FUNCNAME)
@@ -28,7 +29,7 @@ function gabr() {  # A function to run other functions
     # usage
     if ! [[ -v usage ]]; then
         local usage="\
-$FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function to call other functions.
+${prevArgs[@]} [directory | file] function [arguments] -- A function to call other functions.
 "
     fi
     # customize usage
@@ -43,7 +44,7 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
     fi
     # arguments
 ( # @enter subshell
-    if [[ -v GABR_ROOT ]]; then
+    if [[ -v GABR_ROOT ]] && ! [ "$GABR_ROOT" = "$PWD" ]; then
         cd $GABR_ROOT
     fi
     if [[ ${GABR_STRICT_MODE:-true} = true ]]; then
@@ -54,7 +55,7 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
     fi
     ! [[ -v prevArgs ]] && local -a prevArgs=()
     # helpers
-    _isFn(){    [[ $(type -t $fn) = function ]]; }
+    _isFn(){    [[ $(type -t ${1:-$fn}) = function ]]; }
     _canSource(){ ! [[ -v files[$file] ]] || ! [[ ${files[$file]} = $file ]]; }
     _isDebug(){ [[ -v GABR_DEBUG_MODE ]]; }
     # begin processing arguments
@@ -67,11 +68,13 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
         if [[ ${fn::1} = - ]]; then # disallow dash
             prevArgs+=($1)
             shift
-            if ! [ $# -eq 0 ]; then
+            if ! [[ ${fn} = - ]]; then
+                printf $'\033[0;91m'"!: "%s$'\033[0m\n' "Illegal flag: ${fn}" 1>&2
+            elif ! [ $# -eq 0 ]; then
                 printf $'\033[0;91m'"!: "%s$'\033[0m\n' "${@}" 1>&2
             fi
             return 1
-        elif _isFn; then # call a function
+        elif _isFn $fn; then # call a function
             prevArgs+=($1)
             shift
             args=(${@:-})
@@ -96,8 +99,8 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
              _isDebug && set -x
             . ${fn}${ext} # source the file
             _isDebug && set +x
-            _isFn && set -- $fn ${@:-}
-            [ $# -eq 0 ] && set -- ${default} ${prevArgs[@]}
+            _isFn $fn && set -- $fn ${@:-}
+            [ $# -eq 0 ] && _isFn $default && set -- ${default} ${prevArgs[@]}
         elif [[ -f ./${fn} ]]; then # allow a file without extension
             prevArgs+=($1)
             shift
@@ -106,7 +109,7 @@ $FUNCNAME ${prevArgs[@]} [directory | file] function [arguments] -- A function t
             break
         elif [[ -d ./${fn} ]]; then # allow a directory
             cd ./$fn
-            dir=./$fn
+            dir=${dir:-.}/$fn
         elif [[ ${fn} = usage ]]; then # allow a generated usage function
             usage() {
                 echo $usage >&2
@@ -122,7 +125,7 @@ EOF
         elif [ $# -gt 1 ]; then # shift arguments
             prevArgs+=($1)
             shift
-        elif [ $# -eq 1 ] && [[ -f ./${default}${ext} ]] && [[ ${dir:-.} = ./$fn ]]; then
+        elif [[ -f ./${default}${ext} ]] && [[ ${dir: $(( -${#fn}-1 ))} = /$fn ]]; then
             prevArgs+=($1)
             set -- ${default:-usage} ${prevArgs[@]}
         elif [ $# -eq 1 ] && ! [[ ${#files[@]} -eq 0 ]]; then

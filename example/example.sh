@@ -1,3 +1,6 @@
 
-source ./usage.sh # this alows usage to initialize whenever the `example` argument is given
-# It needs it in order to know difference in functions with `declare -F`
+source ./usage.sh # sets the default usage function for all files in this directory
+# 'example' must be given as argument
+if [ -n "${1:-}" ] && ! [ "${1}" = 'usage' ]; then
+    declare usageFiles="" # disable file listing for arguments after 'example' argument
+fi
