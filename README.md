@@ -36,9 +36,9 @@ Let's illustrate that with a flowchart.
 Let's illustrate further with a code example. 
 ```shell
 $ echo "\
-function hello() {
+if [ $# -eq 0 ]; then
   printf '%s\n' 'Usage: gabr hello world' >&2
-}
+fi
 function world() {
   printf '%s\n' 'Hello World.' >&2
 }
@@ -48,8 +48,7 @@ Usage: gabr hello world
 $ gabr hello world
 Hello World.
 ```
-> By naming the file and the function hello,
-> a tiny API emerged to call the function.
+> This is great for a file that contains a collection of functions
 
 A different approach would be:
 ```shell
@@ -70,15 +69,55 @@ Hello World.
 ```
 > See [functions](#Functions) for a different variation of this
 
+Lastly, a `hello` function can be defined to catch all arguments after the `hello` argument.
+```shell
+$ echo "\
+function hello(){
+  [ \$# -eq 0 ] && printf '%s\n' 'Usage: gabr hello <string>' >&2; return 1
+  printf '%s\n' "Hello \$1." >&2
+}
+" > ./hello.sh
+$ gabr hello
+Usage: gabr hello <string>
+$ gabr hello world
+Hello world.
+```
+This makes a function easily reachable but limits a file to one function.
+To omit this, it is alowed -but not adviced- to call `gabr` recursively like so:
+```shell
+$ echo "\
+function hello(){
+  if [ \$# -eq 0 ]; then
+    printf '%s\n' 'Usage: gabr hello world' >&2
+    return 1
+   fi
+   gabr \$@
+}
+function world(){
+  printf '%s\n' "Hello World." >&2
+}
+" > ./hello.sh
+$ gabr hello
+Usage: gabr hello <string>
+$ gabr hello world
+Hello world.
+```
+It is not adviced because it is a unnecessary dependency in most cases.
+There are some usecases for it, namely debugging. See `example/debug.sh` for
+a example of this.
+
+
+
 ## Why use gabr.sh?
-Use it when you want to write a lot of Bash functions.
+Use it when you want to make a simple API to automate stuff *you* care about.
 Consider the following commands to delete a tag with git:
 ```shell
 git tag -d 1.0.1
 git push origin :refs/tags/1.0.1
 ```
 This is hard to remember next time you'd need it.
-Besides I have a lot of tags to delete.
+It's also hard to delete multiple tags because you'd need
+to shift your cursor around to change the tags.
 Now consider the following function.
 ```bash
 set -eu
@@ -101,12 +140,12 @@ With `gabr` a more direct api emerges to do these kind of things:
 $ gabr git deleteTag 1.0.1
 ```
 With this basic concept, all functions you see in .sh files
-will be available through a simple api that is shareable.
+will be available through a simple api that is easy to communicate.
+Just type in what you see.
 
 
 ## Variables
 
-### Variables
 ### GABR_STRICT_MODE (default:true)
 A variable called `GABR_STRICT_MODE` may be used to toggle the following snippet:
 ```bash
@@ -149,7 +188,7 @@ $ export GABR_DEBUG_MODE=true
 
 This variable is useful, because it omits `gabr` debug info from polluting a users code.
 
-### GABR_ROOT / root
+### GABR_ROOT
 If `GABR_ROOT` is set to a value the `gabr` function will change directory
 to this location on every invocation.
 ```shell
@@ -163,13 +202,22 @@ it will always run from a fixed location.
 
 ### GABR_DEFAULT
 A global variable called `GABR_DEFAULT` may be used to influence the default namespace. 
-By default this namespace is `usage`. The default namespace is consulted when no other options are found. 
-If neither a default function nor a default file is found, a default function will be generated. (see [functions](#Functions))
+By default this namespace is `usage`. The default namespace is consulted when:
+  
+  - The last argument was a directory
+    - A file called `usage.sh` will be looked up in that directory
+  - The last argument was a .sh file that contained a default function
+    - The default function will be called
+  - A argument is `usage`
+    - A usage function, file or directory will be looked up
+    - Default function will be generated and called if nothing is found
+  - No arguments are given
+    - Default function will be generated and called
 
 ```shell
 $ export GABR_DEFAULT=index
 ```
-> This will make `index.sh` behave similar to index-files in other programming languages
+> This will make `index.sh` behave similar to index-files in other programming languages.
 
 This variable is useful, but the default value `usage` is probably the way to go. 
 
