@@ -107,7 +107,7 @@ function baa()(
     run gabr
     helpOutput=$output
     debug
-    trap 'rm -f ./help.sh' RETURN
+   # trap 'rm -f ./help.sh' RETURN
     [ "$helpOutput" = "$normalOutput" ]
     run gabr
     debug
