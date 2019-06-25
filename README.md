@@ -30,7 +30,8 @@ Let's illustrate that with a flowchart.
 
 ![Alt text](./Gabr.sh.svg)
 
-This flowchart does not contain all cases. When a argument is neither a function, file or directory a warning will show and the process is stopped. When the last argument is a directory and not a file or function name, a warning will show and the process is stopped. The exception to the above rule is when a directory contains a `usage` file. Finally, the arguments could be mutated during a file source (with the `set` builtin).
+> This flowchart doesn't show error cases. These cases are mostly when the last argument did not result
+> in the execution of a real function.
 
 Let's illustrate further with a code example. 
 ```shell

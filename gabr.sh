@@ -118,7 +118,7 @@ ${prevArgs[@]} [directory | file] function [arguments] -- A function to call oth
             break
         elif [ -d "./${fn}" ]; then # allow a directory
             cd ./$fn
-            dir=./$fn
+            dir=${dir:-.}/$fn
         elif [ "${fn}" = 'usage' ]; then # allow generated usage function
             usage() {
                 echo $usage >&2
