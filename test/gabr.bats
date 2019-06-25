@@ -103,9 +103,11 @@ function baa()(
     debug
     ! [ "${output##*gabr\:}" = "${output}" ]
     GABR_DEFAULT=help
+    cp ./usage.sh ./help.sh
     run gabr
     helpOutput=$output
     debug
+    trap 'rm -f ./help.sh' RETURN
     [ "$helpOutput" = "$normalOutput" ]
     run gabr
     debug
