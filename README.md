@@ -28,7 +28,7 @@ Gabr takes arguments and will try to turn that in to a function call.
 Gabr takes the path of least resistance towards a function call.
 Let's illustrate that with a flowchart.
 
-![Alt text](./Gabr.sh.svg)
+![Happy Flowchart](https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/Gabr.sh.svg)
 
 > This flowchart doesn't show error cases. These cases are mostly when the last argument did not result
 > in the execution of a real function.
@@ -78,7 +78,7 @@ git tag -d 1.0.1
 git push origin :refs/tags/1.0.1
 ```
 This is hard to remember next time you'd need it.
-Besides I have a lot of tags to delete.
+Or say you have a lot of tags to delete.
 Now consider the following function.
 ```bash
 set -eu
@@ -267,7 +267,7 @@ help(){
 
 The internal loop wil error at any argument that starts with a dash (-).
 Any argument that comes behind the dash will be printed as
-a warning to the user.
-```
+a warning to the user. The return code will be 1.
+```bash
 set -- '-' 'Error, something went wrong'
 ```

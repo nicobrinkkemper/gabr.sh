@@ -1,7 +1,8 @@
 # git.sh
 
- Git.sh contains some one-off git functions. To serve as example.
+ Git.sh contains some one-off git functions. To serve as example and to help with maintanance on this repo.
 
+* [pullSubmodules()](#pullSubmodules)
 * [currentBranch()](#currentBranch)
 * [deleteBranch()](#deleteBranch)
 * [upstream()](#upstream)
@@ -10,6 +11,16 @@
 * [deleteTag()](#deleteTag)
 * [renameTag()](#renameTag)
 
+
+## pullSubmodules()
+
+Updates content of /modules
+### Example
+
+```bash
+$ gabr example git pullSubmodules
+master
+```
 
 ## currentBranch()
 
@@ -68,7 +79,6 @@ $ gabr example git deleteLocalBranch feature-branch
 
 * string [ $1 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
 * string [ $2 ]            existing-checkout-branch (default:master) -- e.g. develop
-* string [ $3 | $remote ]  to-delete-remote (default:current) -- e.g. origin
 
 ## deleteTag()
 
@@ -89,7 +99,7 @@ Rename a tag
 ### Example
 
 ```bash
-    gabr example git deleteTag some-feature
+    gabr example git renameTag some-feature
 ```
 
 ### Arguments

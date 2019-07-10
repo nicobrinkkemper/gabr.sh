@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
 # @file git.sh
 #
-# @brief  Git.sh contains some one-off git functions. To serve as example.
+# @brief  Git.sh contains some one-off git functions. To serve as example and to help with maintanance on this repo.
 
-if ! [ "${1:-usage}" = 'usage' ]; then
-    cd $(git rev-parse --show-toplevel) # functions target root directory
-fi
-if [ -z "${remote:-}" ]; then
-    declare remote="$(git remote)"
-fi
-if [ -z "${branch:-}" ]; then
-    declare branch
-    branch="$(git symbolic-ref HEAD 2>/dev/null)" || branch="undefined"
-    branch=${branch##refs/heads/}
-fi
+declare remote="$(git remote)"
+declare branch
+branch="$(git symbolic-ref HEAD 2>/dev/null)" || branch="undefined"
+branch=${branch##refs/heads/}
 
 # @description Updates content of /modules
 # @example
@@ -72,18 +65,16 @@ function deleteStale() {
 #   $ gabr example git deleteLocalBranch feature-branch
 # @arg string [ $1 | $branch ]  to-delete-branch-name (default:current) -- e.g. feature-branch
 # @arg string [ $2 ]            existing-checkout-branch (default:master) -- e.g. develop
-# @arg string [ $3 | $remote ]  to-delete-remote (default:current) -- e.g. origin
 function deleteBranch() {
     local branch=${1:-$branch}
     local checkout=${2:-master}
-    local remote=${3:-remote}
     if [ "${checkout}" = "${branch}" ]; then
         echo "Checkout branch may not be the same as deleted branch" 1>&2
         return 1
     fi
     git checkout $checkout
     git branch -d $branch || echo "Already deleted"
-    git push --delete $(git config --get remote.origin.url) $branch || echo "Already deleted"
+    git push --delete $(git config --get remote.origin.url) $branch || echo "Already deleted remote"
 }
 
 # @description Delete a remote branch
@@ -97,7 +88,7 @@ function deleteTag() {
 
 # @description Rename a tag
 # @example
-#       gabr example git deleteTag some-feature
+#       gabr example git renameTag some-feature
 # @arg $1 old version
 # @arg $2 new version
 function renameTag() {
