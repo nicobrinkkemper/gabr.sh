@@ -8,7 +8,7 @@ declare branch
 branch="$(git symbolic-ref HEAD 2>/dev/null)" || branch="undefined"
 branch=${branch##refs/heads/}
 
-# @description Updates content of /modules
+# @description Inits content of /modules
 # @example
 #   $ gabr example git pullSubmodules
 #   master
@@ -16,6 +16,13 @@ function pullSubmodules() {
     git submodule update --init --recursive
 }
 
+# @description Updates content of /modules
+# @example
+#   $ gabr example git updateSubmodules
+#   master
+function updateSubmodules() {
+    git submodule update --remote --merge
+}
 
 # @description Gets the current branch
 # @example

@@ -3,6 +3,7 @@
  Git.sh contains some one-off git functions. To serve as example and to help with maintanance on this repo.
 
 * [pullSubmodules()](#pullSubmodules)
+* [updateSubmodules()](#updateSubmodules)
 * [currentBranch()](#currentBranch)
 * [deleteBranch()](#deleteBranch)
 * [upstream()](#upstream)
@@ -14,11 +15,21 @@
 
 ## pullSubmodules()
 
-Updates content of /modules
+Inits content of /modules
 ### Example
 
 ```bash
 $ gabr example git pullSubmodules
+master
+```
+
+## updateSubmodules()
+
+Updates content of /modules
+### Example
+
+```bash
+$ gabr example git updateSubmodules
 master
 ```
 
