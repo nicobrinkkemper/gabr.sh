@@ -73,7 +73,7 @@ Lastly, a `hello` function can be defined to catch all arguments after the `hell
 ```shell
 $ echo "\
 function hello(){
-  [ \$# -eq 0 ] && printf '%s\n' 'Usage: gabr hello <string>' >&2; return 1
+  [ \$# -eq 0 ] && printf '%s\n' 'Usage: gabr hello <string>' >&2 && return 1
   printf '%s\n' "Hello \$1." >&2
 }
 " > ./hello.sh
