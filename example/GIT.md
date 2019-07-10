@@ -5,6 +5,7 @@
 * [pullSubmodules()](#pullSubmodules)
 * [updateSubmodules()](#updateSubmodules)
 * [currentBranch()](#currentBranch)
+* [root()](#root)
 * [deleteBranch()](#deleteBranch)
 * [upstream()](#upstream)
 * [deleteStale()](#deleteStale)
@@ -41,6 +42,16 @@ Gets the current branch
 ```bash
 $ gabr example git currentBranch
 master
+```
+
+## root()
+
+Returns root of git repository
+### Example
+
+```bash
+$ gabr example git root
+~/Code/your/project
 ```
 
 ## deleteBranch()

@@ -36,7 +36,7 @@ function currentBranch() {
 # @example
 #   $ gabr example git root
 #   ~/Code/your/project
-function root(){
+function root() {
     command git rev-parse --show-toplevel;
 }
 
