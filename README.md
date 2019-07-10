@@ -28,7 +28,7 @@ Gabr takes arguments and will try to turn that in to a function call.
 Gabr takes the path of least resistance towards a function call.
 Let's illustrate that with a flowchart.
 
-![Happy Flowchart](https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/Gabr.sh.svg)
+![Happy Flowchart](https://raw.githubusercontent.com/nicobrinkkemper/gabr.sh/master/Gabr.sh.svg?sanitize=true)
 
 > This flowchart doesn't show error cases. These cases are mostly when the last argument did not result
 > in the execution of a real function.
