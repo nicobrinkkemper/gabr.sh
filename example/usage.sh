@@ -56,12 +56,11 @@ function _usageFiles(){
         done
         local usageFiles=$(
             IFS=' '
-            ! find . -maxdepth 1 ${findString} -name '*'${ext:-.sh} |
+            ! find . -maxdepth 1 ${findString} -type f \( -iname "*.sh" ! -iname ".*" \) |
                 cut -c3- | # cut ./
                 rev      | 
                 cut -c4- | # cut .sh
                 rev      |
-                awk '!/^\./{ print $0 }' | # hide dot prefixed
                 tr '\n' "|"
             );
         if [ -n "${usageFiles:-}" ] && [ ${#usageFiles} -gt 1 ]; then

@@ -22,18 +22,21 @@ fi
 
 @test "Gabr can find a file and run it's functions" {
     echo "\
-printf %s sourced
-function sayhi(){
-    printf %s hi
+printf '%s' 'saying '
+function hi(){
+    printf '%s' 'hi'
 }
-function saybye(){
-    printf %s bye
-}" > ./sayhi.sh
+function greet(){
+    printf '%s' 'greetings'
+}
+function bye(){
+    printf '%s' 'bye'
+}" > ./say.sh
     source ./gabr.sh
-    local result="$(gabr ./sayhi sayhi) $(gabr ./sayhi) $(gabr sayhi) $(gabr ./sayhi saybye)"
+    local result="$(gabr say hi) $(gabr ./say greet) $(gabr ./say.sh bye)"
     echo failed-result="\"${result}\"" 1>&2
     trap 'rm -f ./sayhi.sh' RETURN
-    [ "$result"  = 'sourcedhi sourced sourcedhi sourcedbye' ]
+    [ "$result"  = 'saying hi saying greetings saying bye' ]
 }
 
 @test "Gabr errors the same return code" {
@@ -163,9 +166,20 @@ function whatdidisay(){
     source ./gabr.sh
     run gabr whatdidisay ' jim ' " has long " " cheeks "
     debug
-    trap 'rm -f ./whatdidisay.sh' RETURN
     [ "$output"  = ' jim   has long   cheeks ' ]
 }
+
+@test "Gabr allows for redundant but more precise alternatives" {
+    source ./gabr.sh
+    run gabr whatdidisay.sh '.sh is redundant'
+    debug
+    [ "$output"  = '.sh is redundant' ]
+    run gabr ./whatdidisay.sh './ and .sh is redundant'
+    debug
+    trap 'rm -f ./whatdidisay.sh' RETURN
+    [ "$output"  = './ and .sh is redundant' ]
+}
+
 
 @test "Gabr sees tabs as separator" {
     echo "\

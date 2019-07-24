@@ -202,17 +202,7 @@ it will always run from a fixed location.
 
 ### GABR_DEFAULT
 A global variable called `GABR_DEFAULT` may be used to influence the default namespace. 
-By default this namespace is `usage`. The default namespace is consulted when:
-  
-  - The last argument was a directory
-    - A file called `usage.sh` will be looked up in that directory
-  - The last argument was a .sh file that contained a default function
-    - The default function will be called
-  - A argument is `usage`
-    - A usage function, file or directory will be looked up
-    - Default function will be generated and called if nothing is found
-  - No arguments are given
-    - Default function will be generated and called
+By default this namespace is `usage`.
 
 ```shell
 $ export GABR_DEFAULT=index
@@ -257,6 +247,18 @@ Gabr defines the following local variables. These will be defined in sourced fil
 | FUNCNEST     	|       	| See manual ([reference](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html)) | 50 | Prohibits overly recursive function calls |
 
 ## Functions
+`gabr` does not try to add any public functions except itself. There are some, but these are
+prefixed with `_`, suggesting they are private (they aren't really). There is also the possibility
+that a default function will be generated.
+
+When running the file that contains the `gabr` function,
+it will be called. In some cases, a default function is generated that is not yours. 
+The name may be changed with `GABR_DEFAULT`. This is not
+the goal of `gabr`, so it will only be added in these rare cases.
+
+- The argument is the default namespace
+  - Default function will be generated and called if nothing is found
+
 ### function usage ()
 By default `usage` is a important namespace for the `gabr` function. `usage` behaves
 like a exit condition. The argument will always result in a function call, and thus

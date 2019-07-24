@@ -56,8 +56,17 @@ ${prevArgs[@]} [directory | file] function [arguments] -- A function to call oth
     ! [[ -v prevArgs ]] && local -a prevArgs=()
     # helpers
     _isFn(){    [[ $(type -t ${1:-$fn}) = function ]]; }
-    _canSource(){ ! [[ -v files[$file] ]] || ! [[ ${files[$file]} = $file ]]; }
     _isDebug(){ [[ -v GABR_DEBUG_MODE ]]; }
+    _listFiles(){ 
+        find . -maxdepth 3 -type f \( -iname "*${ext:-'.sh'}" ! -iname ".*" \) ! -path "*/.*"; # hide dot prefix
+    }
+    _listFunctions(){ 
+        declare -f -F   |
+            tr ' ' '\n' |
+            sort        |
+            uniq -u     |
+            awk '! /^_/{print $0}' # hide underscore prefix
+    }
     # begin processing arguments
     if [ $# -eq 0 ]; then
         set -- $default
@@ -82,30 +91,28 @@ ${prevArgs[@]} [directory | file] function [arguments] -- A function to call oth
             ${fn} ${@:-}; # call the function
             _isDebug && set +x
             break
-        elif [[ -f ./${fn}${ext} ]]; then # allow a file with extension
+        elif [[ ${#fn} -ge 2 && ${fn:0:2} = './' ]]; then  # allow redundant ./ in arguments
+            shift
+            set - ${fn:2} ${@:-}
+        elif [[ ${#fn} -ge ${#ext} && ${fn:$(( ${#fn}-${#ext} ))} = ${ext} ]]; then  # allow redundant .sh in arguments
+            shift
+            set - ${fn:: $(( - ${#ext} ))} ${@:-}
+        elif [[ -r ./${fn}${ext} ]]; then # allow a file with extension and read permissions
             file=${fn}${ext}
-            if ! _canSource; then
-                set -- '-' "'$file' is already sourced by argument $fn" 1>&2
-                continue
-            fi
             files+=([$file]=$file)
-            if ! [ -r "${file:-}" ]; then
-                set -- '-' "'$file' is not a readable file" 1>&2
-                continue
-            fi
             prevArgs+=($1)
             shift
             args=(${@:-})
-             _isDebug && set -x
-            . ${fn}${ext} # source the file
+            _isDebug && set -x
+            . ./${fn}${ext} # source the file
             _isDebug && set +x
             _isFn $fn && set -- $fn ${@:-}
             [ $# -eq 0 ] && _isFn $default && set -- ${default} ${prevArgs[@]}
-        elif [[ -f ./${fn} ]]; then # allow a file without extension
+        elif [[ -f ./${fn} && -x ./${fn} ]]; then # allow a file without extension and executable permissions
             prevArgs+=($1)
             shift
             args=(${@:-})
-            exec ${fn} $@ # execute the file
+            exec ./${fn} $@ # execute the file
             break
         elif [[ -d ./${fn} ]]; then # allow a directory
             cd ./$fn
@@ -122,19 +129,23 @@ $default() {
 EOF
             _isFn && continue
             set -- '-' "Could not generate default function"
-        elif [ $# -gt 1 ]; then # shift arguments
+        elif [[ $# -gt 1 ]]; then # shift arguments
             prevArgs+=($1)
             shift
-        elif [[ -f ./${default}${ext} ]] && [[ ${dir: $(( -${#fn}-1 ))} = /$fn ]]; then
+        elif [[ -r ./${default}${ext} && ${dir: $(( -${#fn}-1 ))} = /$fn ]]; then # allow a default fallback in a directory
             prevArgs+=($1)
             set -- ${default:-usage} ${prevArgs[@]}
-        elif [ $# -eq 1 ] && ! [[ ${#files[@]} -eq 0 ]]; then
-            set -- '-' "\
-'$fn' could not be used to call a function in file(s): $(echo ${!files[@]})"
-        elif [ $# -eq 1 ] && [[ -v dir ]]; then
-            set -- '-' "'$fn' could not be used to call a function in directory $dir"
+        elif [[ $# -eq 1 && ! ${#files[@]} -eq 0 ]]; then
+            set -- '-' \
+            "Argument '$fn' could not be used to call a function in file(s):" \
+            ${!files[@]} \
+            "Below options are valid:" \
+            $(_listFunctions)
         else
-            set -- '-'  "'$fn' could not be used as file, function or directory"
+            set -- '-' \
+            "Argument '$fn' could not be used as file, function or directory." \
+            "Below options are valid:" \
+            $(printf '  %s\n' $(_listFiles))
         fi
     done
     return;
