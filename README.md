@@ -36,7 +36,7 @@ Let's illustrate that with a flowchart.
 Let's illustrate further with a code example. 
 ```shell
 $ echo "\
-if [ $# -eq 0 ]; then
+if [ \$# -eq 0 ]; then
   printf '%s\n' 'Usage: gabr hello world' >&2
 fi
 function world() {
@@ -48,65 +48,8 @@ Usage: gabr hello world
 $ gabr hello world
 Hello World.
 ```
-> This is great for a file that contains a collection of functions
 
-A different approach would be:
-```shell
-$ echo "\
-function usage() {
-  printf '%s\n' 'Usage: gabr hello world'
-}
-function world() {
-  printf '%s\n' 'Hello World.' >&2
-}
-" > ./hello.sh
-$ gabr hello
-Usage: gabr hello world
-$ gabr hello usage
-Usage: gabr hello world
-$ gabr hello world
-Hello World.
-```
-> See [functions](#Functions) for a different variation of this
-
-Lastly, a `hello` function can be defined to catch all arguments after the `hello` argument.
-```shell
-$ echo "\
-function hello(){
-  [ \$# -eq 0 ] && printf '%s\n' 'Usage: gabr hello <string>' >&2 && return 1
-  printf '%s\n' "Hello \$1." >&2
-}
-" > ./hello.sh
-$ gabr hello
-Usage: gabr hello <string>
-$ gabr hello world
-Hello world.
-```
-This makes a function easily reachable but limits a file to one function.
-To omit this, it is alowed -but not adviced- to call `gabr` recursively like so:
-```shell
-$ echo "\
-function hello(){
-  if [ \$# -eq 0 ]; then
-    printf '%s\n' 'Usage: gabr hello world' >&2
-    return 1
-   fi
-   gabr \$@
-}
-function world(){
-  printf '%s\n' "Hello World." >&2
-}
-" > ./hello.sh
-$ gabr hello
-Usage: gabr hello <string>
-$ gabr hello world
-Hello world.
-```
-It is not adviced because it is a unnecessary dependency in most cases.
-There are some usecases for it, namely debugging. See `example/debug.sh` for
-a example of this.
-
-
+And there you have it. That's all it does. But it is deceptively useful.
 
 ## Why use gabr.sh?
 Use it when you want to make a simple API to automate stuff *you* care about.
@@ -143,6 +86,17 @@ With this basic concept, all functions you see in .sh files
 will be available through a simple api that is easy to communicate.
 Just type in what you see.
 
+## Sourcing `gabr` vs running `gabr`
+For normal use I recommend running `gabr` as a file. This is default behavior when running `npm link`.
+If you've forked the repo and npm-linked from there then any changes will update the linked file.
+
+It is also possible to source `gabr`. This can be used in scripts or a shell-terminal.
+By running `. gabr`, gabr will not run as a file but instead as a function. For example:
+```shell
+$ . gabr
+$ GABR_DEBUG_MODE=1 # we do not need to export this
+$ gabr example human
+``` 
 
 ## Variables
 
@@ -153,7 +107,7 @@ set -eEuo pipefail
 local IFS=$'\n\t'
 trap 'return $?' ERR SIGINT
 ```
-This snippet will run once inside the subshell where the function is called and the file is sourced.
+This snippet will run once inside the function's subshell clause.
 Let's go over the three lines:
 
 1)
@@ -176,7 +130,6 @@ To opt-out of strict-mode:
 ```shell
 $ export GABR_STRICT_MODE=off
 ```
-> export is not needed when running as a local function
 
 ### GABR_DEBUG_MODE
 Setting this variable to a value will turn on debug mode for files and functions.
@@ -186,11 +139,11 @@ file source and function call.
 $ export GABR_DEBUG_MODE=true
 ```
 
-This variable is useful, because it omits `gabr` debug info from polluting a users code.
+This variable is useful, because just using `set -x` might also output `gabr`'s internal code.
 
 ### GABR_ROOT
 If `GABR_ROOT` is set to a value the `gabr` function will change directory
-to this location on every invocation.
+to this value on every invocation.
 ```shell
 $ export GABR_ROOT=$(git rev-parse --show-toplevel)
 ```
@@ -201,19 +154,20 @@ in the same output. Keep in mind that the `gabr` function will lose it's flexibi
 it will always run from a fixed location.
 
 ### GABR_DEFAULT
-A global variable called `GABR_DEFAULT` may be used to influence the default namespace. 
-By default this namespace is `usage`.
+A global variable called `GABR_DEFAULT` may be used to influence the exit condition.
+`gabr` will exit it's internal loop when it finds a function it can call.
+The argument `usage` always results in a function call and thus can be used as a means to exit.
+A second option may be added by setting `GABR_DEFAULT` (global) or `default` (local) to a value.
 
 ```shell
 $ export GABR_DEFAULT=index
 ```
 > This will make `index.sh` behave similar to index-files in other programming languages.
-
-This variable is useful, but the default value `usage` is probably the way to go. 
+> But `usage` makes more sense for Bash IMO
 
 ### GABR_EXT
-`GABR_EXT` may be used to alter the value of `ext`. Files with a `.sh` extension are
-sourced, files without are ran with `exec`
+`GABR_EXT` may be used to alter the value of `ext`. The default value is `.sh`.
+Files with this extension are sourced, files without are ran with `exec`.
 
 ```shell
 $ export GABR_EXT=.bash
@@ -221,14 +175,7 @@ $ export GABR_EXT=.bash
 
 With the right shebang, any programming language can be called. However, keep in mind
 that `gabr` also looks for files without a extension. These files will always run with
-`exec`. For example, see `./example/javascript`
-```shell
-$ gabr example javascript hello
-Arguments received: 3
-0 -> .../node/v11.7.0/bin/node
-1 -> .../gabr/example/javascript
-2 -> hello
-```
+`exec`.
 
 ### Local variables
 Gabr defines the following local variables. These will be defined in sourced files.
@@ -247,17 +194,11 @@ Gabr defines the following local variables. These will be defined in sourced fil
 | FUNCNEST     	|       	| See manual ([reference](https://www.gnu.org/software/bash/manual/html_node/Bash-Variables.html)) | 50 | Prohibits overly recursive function calls |
 
 ## Functions
-`gabr` does not try to add any public functions except itself. There are some, but these are
-prefixed with `_`, suggesting they are private (they aren't really). There is also the possibility
-that a default function will be generated.
+A default function will be generated that prints usage information about `gabr` when:
 
-When running the file that contains the `gabr` function,
-it will be called. In some cases, a default function is generated that is not yours. 
-The name may be changed with `GABR_DEFAULT`. This is not
-the goal of `gabr`, so it will only be added in these rare cases.
-
-- The argument is the default namespace
-  - Default function will be generated and called if nothing is found
+- No argument are given
+- A argument is `usage`
+- The argument is the value of `GABR_DEFAULT` and `GABR_DEFAULT` is set
 
 ### function usage ()
 By default `usage` is a important namespace for the `gabr` function. `usage` behaves
@@ -294,16 +235,16 @@ usage(){
 }
 ```
 
-Finally, a default file may be consulted when the
-a argument is a directory but not a file. For a example of this, see `./test/usage.sh`
+Finally, a default file may be consulted. This is applicable when the
+a argument is only a directory. For a example of this, see `./test/usage.sh`
 or run `gabr test` to see it in action.
 
 ### function $default ()
-The namespace for `usage` may be altered with `GABR_DEFAULT` or simply `default`.
+The name of the `usage` function may be altered with `GABR_DEFAULT` or simply `default`.
 A last-resort function and variable will be made for this name instead.
+The usage namespace will keep functioning.
 This is done through variable indirection. ([reference](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html))
-To generate a function with a dynamic name a small eval trick is used. For this reason
-the `default` variable may not contain special-characters.
+To generate a function with a dynamic name a small eval trick is used.
 
 ```bash
 default=help
