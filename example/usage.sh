@@ -2,23 +2,12 @@
 # @file usage.sh
 #
 # @brief  Usage.sh contains a example on how to reimplement the usage behavior of gabr.
+
 set +x
 declare stack="$(declare -f -F)" # start keeping count of stack (usage.sh will do difference check)
 if [ -n "${GABR_DEBUG_MODE:-}" ]; then
     set -x
 fi
-
-
-usage() {
-    set +x
-    if [ $# -eq 0 ]; then
-        set -- ${prevArgs[@]:-}
-    fi
-    local stack="${stack:-$(declare -F)}"
-    local -a bashsource=(${BASH_SOURCE[@]} ${@})
-    local fullCommand="$(IFS=' '; echo ${@##*usage})" # strip 'usage' of $@
-    echo "Usage: ${fullCommand}$(_usageFiles)$(_usageScope) ${example:-}" >&2
-}
 
 function _filename(){
     local filename=${1:-$BASH_SOURCE}
@@ -41,11 +30,12 @@ function _usageScope(){ # Prints all functions added to scope by gabr
             set -x
         fi
         if [ -n "${usageScope:-}" ] && [ ${#usageScope} -gt 1 ]; then
-            usageScope=" [${usageScope:0: -1}]" # strip last |
+            usageScope=" [${usageScope%|}]" # strip last |
         fi
     fi
     echo "${usageScope:-}"
 }
+
 
 function _usageFiles(){
     if ! [ "${usageFiles+set}" = "set" ]; then
@@ -64,8 +54,20 @@ function _usageFiles(){
                 tr '\n' "|"
             );
         if [ -n "${usageFiles:-}" ] && [ ${#usageFiles} -gt 1 ]; then
-            usageFiles=" [${usageFiles:0: -1}]" # strip last |
+            usageFiles=" [${usageFiles%|}]" # strip last |
         fi
     fi
     echo "${usageFiles:-}"
+}
+
+
+usage() {
+    set +x
+    if [ $# -eq 0 ]; then
+        set -- ${prevArgs[@]:-}
+    fi
+    local stack="${stack:-$(declare -F)}"
+    local -a bashsource=(${BASH_SOURCE[@]} ${@})
+    local fullCommand="$(IFS=' '; echo ${@##*usage})" # strip 'usage' of $@
+    echo "Usage: ${fullCommand}$(_usageFiles)$(_usageScope) ${example:-}" >&2
 }

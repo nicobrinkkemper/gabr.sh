@@ -5,6 +5,7 @@ function hi(){
 function greet(){
     printf '%s' 'greetings'
 }
-function bye(){
-    printf '%s' 'bye'
+
+function start(){
+    printf '%s' 'start'
 }

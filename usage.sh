@@ -8,9 +8,5 @@ Try out:
     - gabr test
     - gabr example docker test 3.2
 Usage: ${usage:-'not set'}" >&2
-    if [ -n "${GABR_ROOT:-}" ]; then
-        printf '%s\n' "\
-# You might be seeing this message because GABR_ROOT=$GABR_ROOT. It doesn't have to be set 
-to the location of this repository, but your own." >&2
-    fi
+    
 }

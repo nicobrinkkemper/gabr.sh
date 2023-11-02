@@ -23,7 +23,7 @@ $ npm link gabr
 > If you want to run `gabr` as a local function, try `. gabr`
 
 ## What is gabr.sh
-Gabr is a Bash function designed to call other Bash functions.
+Gabr is a Bash-function designed to call other Bash-functions.
 Gabr takes arguments and will try to turn that in to a function call.
 Gabr takes the path of least resistance towards a function call.
 Let's illustrate that with a flowchart.
@@ -197,11 +197,11 @@ Gabr defines the following local variables. These will be defined in sourced fil
 A default function will be generated that prints usage information about `gabr` when:
 
 - No argument are given
-- A argument is `usage`
+- The argument is `usage`
 - The argument is the value of `GABR_DEFAULT` and `GABR_DEFAULT` is set
 
 ### function usage ()
-By default `usage` is a important namespace for the `gabr` function. `usage` behaves
+By default `usage` is an important namespace for the `gabr` function. `usage` behaves
 like a exit condition. The argument will always result in a function call, and thus
 exit the interal loop. The following snippet shows the last-resort function that will be generated when a `usage` function or file is not available.
 
@@ -236,7 +236,7 @@ usage(){
 ```
 
 Finally, a default file may be consulted. This is applicable when the
-a argument is only a directory. For a example of this, see `./test/usage.sh`
+argument is only a directory. For an example of this, see `./test/usage.sh`
 or run `gabr test` to see it in action.
 
 ### function $default ()
