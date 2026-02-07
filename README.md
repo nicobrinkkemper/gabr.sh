@@ -174,7 +174,7 @@ $ export GABR_EXT=.bash
 ```
 
 With the right shebang, any programming language can be called. However, keep in mind
-that `gabr` also looks for files without a extension. These files will always run with
+that `gabr` also looks for files without an extension. These files will always run with
 `exec`.
 
 ### Local variables
@@ -202,7 +202,7 @@ A default function will be generated that prints usage information about `gabr` 
 
 ### function usage ()
 By default `usage` is an important namespace for the `gabr` function. `usage` behaves
-like a exit condition. The argument will always result in a function call, and thus
+like an exit condition. The argument will always result in a function call, and thus
 exit the interal loop. The following snippet shows the last-resort function that will be generated when a `usage` function or file is not available.
 
 ```bash

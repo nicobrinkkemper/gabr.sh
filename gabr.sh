@@ -16,7 +16,7 @@
 # @exitcode >0 On failure
 #
 # we can source linux version if available (has minor benefits like file checking)
-if [ ${BASH_VERSION:0:1} -ge 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ] && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
+if { [ ${BASH_VERSION:0:1} -ge 5 ] || { [ ${BASH_VERSION:0:1} -eq 4 ] && [ ${BASH_VERSION:2:1} -ge 4 ]; }; } && [[ -r "${BASH_SOURCE}.linux" || -r "${BASH_SOURCE%\.sh*}.linux.sh" ]]; then
     . "${BASH_SOURCE%\.sh*}.linux$([ "${BASH_SOURCE}" != "${BASH_SOURCE%\.sh*}" ] && echo .sh)"
 else
 function gabr() {  # A function to run other functions 
