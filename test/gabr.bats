@@ -20,7 +20,7 @@ if ! [ -f "./gabr.sh" ]; then
 fi
 
 
-@test "Gabr can find a file and run it's functions" {
+@test "Gabr can find a file and run its functions" {
     echo "\
 printf '%s' 'saying '
 function hi(){
@@ -142,7 +142,7 @@ function baa()(
     [ "${output}" = "${hack}" ]
 }
 
-@test "gabr does not walk over a error" {
+@test "gabr does not walk over an error" {
     function dontwalkover()(
         return1
         echo nowido
