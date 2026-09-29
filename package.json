@@ -32,6 +32,6 @@
   },
   "homepage": "https://github.com/nicobrinkkemper/gabr.sh#readme",
   "devDependencies": {
-    "release-it": "^20.2.0"
+    "release-it": "^21.0.1"
   }
 }
